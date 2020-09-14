@@ -13,3 +13,7 @@ charset = utf-8
 [*.md]
 charset = utf-8
 trim_trailing_whitespace = false
+
+[{M,m}akefile{,.*}]
+charset = utf-8
+indent_style = tab

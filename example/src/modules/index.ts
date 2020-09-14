@@ -1,1 +1,3 @@
-export default [];
+import { UserModule } from './user';
+
+export default [UserModule];

@@ -7,6 +7,7 @@ ESLINT := node_modules/.bin/eslint
 JEST := node_modules/.bin/jest
 LOCKFILE_LINT := node_modules/.bin/lockfile-lint
 MAJESTIC := node_modules/.bin/majestic
+NODEMON := node_modules/.bin/nodemon
 PRETTIER := node_modules/.bin/prettier
 TSC := node_modules/.bin/tsc
 COLLECT_COVERAGE_FROM := ["src/**/*.{js,jsx,ts,tsx}"]
@@ -138,26 +139,31 @@ test-watch: ~lint
 .PHONY: start +start
 start: ~format
 	@$(MAKE) -s +start
-+start:
-	@$(BABEL_NODE) --extensions '.ts,.tsx' src $(ARGS)
++start: env
+	@$(NODEMON) --watch src -e ts --exec nest start
+
+.PHONY: env
+env: .env
+.env:
+	@cp example.env .env
 
 .PHONY: clean
 clean:
 	-@$(JEST) --clearCache
 ifeq ($(PLATFORM), win32)
 	-@git clean -fXd \
-		-e !/node_modules \
-		-e !/node_modules/**/* \
-		-e !/yarn.lock \
-		-e !/pnpm-lock.yaml \
-		-e !/package-lock.json
+		-e !node_modules \
+		-e !node_modules/**/* \
+		-e !yarn.lock \
+		-e !pnpm-lock.yaml \
+		-e !package-lock.json
 else
 	-@git clean -fXd \
-		-e \!/node_modules \
-		-e \!/node_modules/**/* \
-		-e \!/yarn.lock \
-		-e \!/pnpm-lock.yaml \
-		-e \!/package-lock.json
+		-e \!node_modules \
+		-e \!node_modules/**/* \
+		-e \!yarn.lock \
+		-e \!pnpm-lock.yaml \
+		-e \!package-lock.json
 endif
 	-@$(RM) -rf node_modules/.cache
 	-@$(RM) -rf node_modules/.make
@@ -169,9 +175,6 @@ purge: clean
 
 .PHONY: report
 report: spellcheck lint test
-	@
-
-always:
 	@
 
 %:

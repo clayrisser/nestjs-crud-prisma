@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import fs from 'fs';
+// import fs from 'fs';
 import getPort from 'get-port';
 import path from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -13,8 +13,8 @@ const logger = console;
 const rootPath = path.resolve(__dirname, '../..');
 dotenv.config();
 process.env = {
-  ...process.env,
-  ...dotenv.parse(fs.readFileSync(path.resolve(rootPath, 'prisma/.env')))
+  ...process.env
+  // ...dotenv.parse(fs.readFileSync(path.resolve(rootPath, 'prisma/.env')))
 };
 const { env } = process;
 

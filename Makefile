@@ -139,7 +139,7 @@ test-watch: ~lint
 start: ~format
 	@$(MAKE) -s +start
 +start:
-	@$(BABEL_NODE) --extensions '.ts,.tsx' src $(ARGS)
+	@cd example && $(NPM) run start
 
 .PHONY: clean
 clean:
@@ -169,9 +169,6 @@ purge: clean
 
 .PHONY: report
 report: spellcheck lint test
-	@
-
-always:
 	@
 
 %:
