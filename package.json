@@ -1,0 +1,95 @@
+{
+  "name": "nestjs-crud-prisma",
+  "version": "0.0.1",
+  "description": "crud for restful apis built with nestjs and prisma",
+  "keywords": [
+    "nestjs-crud-prisma",
+    "nestjs",
+    "prisma",
+    "crud",
+    "api",
+    "rest"
+  ],
+  "homepage": "https://github.com/codejamninja/nestjs-crud-prisma",
+  "bugs": {
+    "url": "https://github.com/codejamninja/nestjs-crud-prisma/issues",
+    "email": "jam@codejam.ninja"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Jam Risser",
+    "email": "jam@codejam.ninja",
+    "url": "https://codejam.ninja"
+  },
+  "files": [
+    "lib"
+  ],
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codejamninja/nestjs-crud-prisma"
+  },
+  "scripts": {
+    "build": "make -s build",
+    "clean": "make -s clean",
+    "coverage": "make -s coverage",
+    "format": "make -s format",
+    "inc": "npm version patch --git=false 2>/dev/null || true",
+    "lint": "make -s lint",
+    "make": "make",
+    "prepare": "make -s prepare",
+    "purge": "make -s purge",
+    "report": "make -s report",
+    "spellcheck": "make -s spellcheck",
+    "start": "make -s start",
+    "test": "make -s test",
+    "test:ui": "make test-ui",
+    "test:watch": "make -s test-watch"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.11.2",
+    "core-js": "^3.6.5"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.11.4",
+    "@babel/node": "^7.10.5",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-proposal-decorators": "^7.10.5",
+    "@babel/plugin-proposal-optional-chaining": "^7.11.0",
+    "@babel/plugin-transform-runtime": "^7.11.5",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-typescript": "^7.10.4",
+    "@types/jest": "^26.0.10",
+    "@types/node": "^14.10.1",
+    "@typescript-eslint/eslint-plugin": "^3.10.1",
+    "@typescript-eslint/parser": "^3.10.1",
+    "cspell": "^4.1.0",
+    "eslint": "^7.7.0",
+    "eslint-config-airbnb-typescript": "^9.0.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.22.0",
+    "jest": "^26.4.2",
+    "jest-sonar-reporter": "^2.0.0",
+    "lockfile-lint": "^4.3.7",
+    "majestic": "^1.7.0",
+    "makefiles": "^0.0.13",
+    "prettier": "^2.1.1",
+    "typescript": "^4.0.2"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "eslintIgnore": [
+    "lib"
+  ],
+  "jest": {
+    "testRegex": "tests(/|/.*/)[^_/]*[jt]sx?$",
+    "verbose": true
+  },
+  "jestSonar": {
+    "reportPath": "node_modules/.tmp/reports",
+    "reportFile": "test-report.xml",
+    "indent": 4
+  }
+}
