@@ -1,0 +1,29 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator typegraphql {
+  provider = "node_modules/typegraphql-prisma-nestjs/generator.js"
+  output   = "../src/generated/type-graphql"
+}
+
+model User {
+  id        String   @default(cuid()) @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  email     String   @unique
+  password  String
+  firstname String?
+  lastname  String?
+  role      Role
+}
+
+enum Role {
+  ADMIN
+  USER
+}

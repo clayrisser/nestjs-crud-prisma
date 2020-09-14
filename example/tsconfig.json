@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "allowSyntheticDefaultImports": true,
     "declaration": true,
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
@@ -15,5 +16,5 @@
     "strict": true,
     "target": "esnext"
   },
-  "include": ["src", "tests"]
+  "exclude": ["node_modules", "dist", "graphql"]
 }

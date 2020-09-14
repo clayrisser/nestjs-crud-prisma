@@ -9,6 +9,7 @@ LOCKFILE_LINT := node_modules/.bin/lockfile-lint
 MAJESTIC := node_modules/.bin/majestic
 NODEMON := node_modules/.bin/nodemon
 PRETTIER := node_modules/.bin/prettier
+PRISMA := node_modules/.bin/prisma
 TSC := node_modules/.bin/tsc
 COLLECT_COVERAGE_FROM := ["src/**/*.{js,jsx,ts,tsx}"]
 
@@ -136,10 +137,67 @@ test-watch: ~lint
 +test-watch:
 	@$(JEST) --watch $(ARGS)
 
+.PHONY: prisma-up
+prisma-up:
+	@$(PRISMA) migrate up --experimental
+
+.PHONY: prisma-save
+prisma-save:
+	@$(PRISMA) migrate save --experimental
+
+.PHONY: prisma-studio
+prisma-studio:
+	@$(PRISMA) studio --experimental
+
+.PHONY: prisma-generate-watch
+prisma-generate-watch:
+	@$(PRISMA) generate --watch
+
+.PHONY: seed +seed
+seed: prisma-up
+	@$(MAKE) -s +seed
++seed:
+	@$(SHELL) prisma/scripts/wait-for-postgres.sh
+	@$(BABEL_NODE) --extensions '.ts,.tsx' prisma/seed.ts
+
+.PHONY: docker-build
+docker-build:
+	@$(MAKE) -C docker build
+
+.PHONY: docker-push
+docker-push:
+	@$(MAKE) -C docker push
+
+.PHONY: docker-pull
+docker-pull:
+	@$(MAKE) -C docker pull
+
+.PHONY: docker-ssh
+docker-ssh:
+	@$(MAKE) -C docker ssh
+
+.PHONY: docker-up
+docker-up:
+	@$(MAKE) -C docker up
+
+.PHONY: docker-clean
+docker-stop:
+	@$(MAKE) -C docker clean
+
+.PHONY: stop
+stop:
+	@$(MAKE) -C docker stop
+
+.PHONY: postgres
+postgres:
+	@$(MAKE) -C docker postgres
+
 .PHONY: start +start
 start: ~format
 	@$(MAKE) -s +start
 +start: env
+	@$(MAKE) -s -C docker postgres ARGS="-d"
+	@$(MAKE) -s seed
 	@$(NODEMON) --watch src -e ts --exec nest start
 
 .PHONY: env
@@ -148,7 +206,7 @@ env: .env
 	@cp example.env .env
 
 .PHONY: clean
-clean:
+clean: docker-clean
 	-@$(JEST) --clearCache
 ifeq ($(PLATFORM), win32)
 	-@git clean -fXd \
