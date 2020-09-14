@@ -1,0 +1,96 @@
+{
+  "extends": ["airbnb-typescript/base", "prettier"],
+  "parser": "@typescript-eslint/parser",
+  "root": true,
+  "env": {
+    "browser": true
+  },
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "ecmaFeatures": {
+      "legacyDecorators": true
+    }
+  },
+  "rules": {
+    "@typescript-eslint/indent": "off",
+    "arrow-body-style": "off",
+    "class-methods-use-this": "off",
+    "comma-dangle": ["error", "never"],
+    "default-case": "off",
+    "import/no-cycle": "off",
+    "import/prefer-default-export": "off",
+    "max-classes-per-file": "off",
+    "no-await-in-loop": "off",
+    "no-empty-function": ["error", { "allow": ["constructors"] }],
+    "no-extra-boolean-cast": "off",
+    "no-param-reassign": "off",
+    "no-plusplus": "off",
+    "no-return-assign": "off",
+    "no-shadow": "off",
+    "no-underscore-dangle": "off",
+    "no-use-before-define": "off",
+    "no-useless-constructor": "off",
+    "yoda": "off",
+    "import/no-unresolved": [
+      "error",
+      {
+        "ignore": ["^~"]
+      }
+    ],
+    "no-unused-vars": [
+      "warn",
+      {
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "ignoreRestSiblings": true,
+        "vars": "all"
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "ignoreRestSiblings": true,
+        "vars": "all"
+      }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": [
+          "**/*.stories.js",
+          "**/*.stories.jsx",
+          "**/*.stories.ts",
+          "**/*.stories.tsx",
+          "storybook/*.js",
+          "storybook/*.jsx",
+          "storybook/*.ts",
+          "storybook/*.tsx"
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["*.test.js", "*.test.jsx", "*.test.ts", "*.test.tsx"],
+      "env": {
+        "jest": true
+      },
+      "plugins": ["jest"]
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "no-unused-vars": "off",
+      }
+    }
+  ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  }
+}

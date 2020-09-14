@@ -1,18 +1,15 @@
 {
-  "name": "nestjs-crud-prisma",
+  "name": "nestjs-example",
   "version": "0.0.1",
-  "description": "crud for restful apis built with nestjs and prisma",
+  "description": "nestjs example",
   "keywords": [
-    "nestjs-crud-prisma",
+    "nestjs-example",
     "nestjs",
-    "prisma",
-    "crud",
-    "api",
-    "rest"
+    "example"
   ],
-  "homepage": "https://github.com/codejamninja/nestjs-crud-prisma",
+  "homepage": "https://github.com/codejamninja/nestjs-example",
   "bugs": {
-    "url": "https://github.com/codejamninja/nestjs-crud-prisma/issues",
+    "url": "https://github.com/codejamninja/nestjs-example/issues",
     "email": "jam@codejam.ninja"
   },
   "license": "MIT",
@@ -27,7 +24,7 @@
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/codejamninja/nestjs-crud-prisma"
+    "url": "https://github.com/codejamninja/nestjs-example"
   },
   "scripts": {
     "build": "make -s build",
@@ -48,10 +45,14 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.11.2",
-    "core-js": "^3.6.5"
-  },
-  "peerDependencies": {
-    "@nestjsx/crud": "^4.6.2"
+    "@nestjs/common": "^7.4.4",
+    "@nestjs/config": "^0.5.0",
+    "@nestjs/core": "^7.4.4",
+    "@nestjs/platform-express": "^7.4.4",
+    "@nestjs/swagger": "^4.6.0",
+    "core-js": "^3.6.5",
+    "dotenv": "^8.2.0",
+    "get-port": "^5.1.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.11.6",
@@ -63,7 +64,6 @@
     "@babel/plugin-transform-runtime": "^7.11.5",
     "@babel/preset-env": "^7.11.5",
     "@babel/preset-typescript": "^7.10.4",
-    "@nestjsx/crud": "^4.6.2",
     "@types/jest": "^26.0.13",
     "@types/node": "^14.10.1",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
