@@ -56,8 +56,9 @@
     "graphql-fields": "^2.0.3",
     "graphql-type-json": "^0.3.2",
     "ora": "^5.1.0",
-    "prisma-scripts": "^0.1.4",
-    "reflect-metadata": "^0.1.13"
+    "prisma-scripts": "^0.1.5",
+    "reflect-metadata": "^0.1.13",
+    "swagger-ui-express": "^4.1.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.11.6",

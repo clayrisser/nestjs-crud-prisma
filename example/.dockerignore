@@ -79,3 +79,4 @@ package-lock.json
 yarn.lock
 tsconfig.tsbuildinfo
 pnpm-lock.yaml
+/src/generated
