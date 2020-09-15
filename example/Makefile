@@ -142,7 +142,6 @@ test-watch: ~lint
 start: ~format
 	@$(MAKE) -s +start
 +start: env
-	@$(MAKE) -s -C docker postgres ARGS="-d"
 	@$(MAKE) -s seed
 	@$(NODEMON) --watch src -e ts --exec nest start
 

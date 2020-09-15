@@ -15,15 +15,14 @@ const { env } = process;
 (async () => {
   logger.log('seeding . . .');
   const fullnameArray = (env.SEED_ADMIN_FULLNAME || '').split(' ');
-  const email = env.SEED_ADMIN_EMAIL;
+  const email = env.SEED_ADMIN_EMAIL || '';
   let firstname = fullnameArray.pop();
   let lastname = '';
   if (fullnameArray.length) {
     lastname = firstname!;
     firstname = fullnameArray.join(' ');
   }
-  const users = await prisma.user.findMany({ first: 1 });
-  if (users.length) {
+  if (await prisma.user.count()) {
     logger.log('already seeded');
   } else {
     const admin = await prisma.user.create({
@@ -38,5 +37,5 @@ const { env } = process;
     });
     logger.log({ admin: { ...admin, password: '***' } });
   }
-  await prisma.disconnect();
+  await prisma.$disconnect();
 })().catch(logger.error);
