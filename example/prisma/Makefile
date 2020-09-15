@@ -10,9 +10,22 @@ up: generate postgres
 	@$(WAIT_FOR_POSTGRES)
 	@$(PRISMA) migrate up --experimental
 
+.PHONY: down
+down: generate postgres
+	@$(WAIT_FOR_POSTGRES)
+	@$(PRISMA) migrate down --experimental
+
 .PHONY: save
 save:
 	@$(PRISMA) migrate save --experimental
+
+.PHONY: introspect
+introspect:
+	@$(PRISMA) introspect
+
+.PHONY: format
+format:
+	@$(PRISMA) format
 
 .PHONY: studio
 studio:

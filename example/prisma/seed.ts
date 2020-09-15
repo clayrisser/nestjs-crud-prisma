@@ -1,10 +1,11 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
+import ora from 'ora';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 
-const logger = console;
 const prisma = new PrismaClient();
+const spinner = ora();
 dotenv.config();
 process.env = {
   ...process.env,
@@ -13,7 +14,7 @@ process.env = {
 const { env } = process;
 
 (async () => {
-  logger.log('seeding . . .');
+  spinner.start('seeding');
   const fullnameArray = (env.SEED_ADMIN_FULLNAME || '').split(' ');
   const email = env.SEED_ADMIN_EMAIL || '';
   let firstname = fullnameArray.pop();
@@ -23,7 +24,7 @@ const { env } = process;
     firstname = fullnameArray.join(' ');
   }
   if (await prisma.user.count()) {
-    logger.log('already seeded');
+    spinner.info('already seeded');
   } else {
     const admin = await prisma.user.create({
       data: {
@@ -35,7 +36,8 @@ const { env } = process;
         role: 'ADMIN'
       }
     });
-    logger.log({ admin: { ...admin, password: '***' } });
+    spinner.succeed('seeded');
+    console.log({ admin: { ...admin, password: '***' } });
   }
   await prisma.$disconnect();
-})().catch(logger.error);
+})().catch(spinner.fail);

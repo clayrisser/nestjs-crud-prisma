@@ -45,6 +45,7 @@ prepare:
 .PHONY: format +format _format ~format
 format: _format ~format
 ~format: $(FORMAT_TARGET)
+	@$(MAKE) -s -C prisma format
 +format: _format $(FORMAT_TARGET)
 _format:
 	-@rm -rf $(DONE)/_format $(NOFAIL)
