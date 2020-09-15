@@ -142,8 +142,7 @@ test-watch: ~lint
 .PHONY: start +start
 start: ~format
 	@$(MAKE) -s +start
-+start: env
-	@$(MAKE) -s seed
++start: seed
 	@$(NODEMON) --watch src -e ts --exec nest start
 
 .PHONY: env
