@@ -9,7 +9,6 @@ LOCKFILE_LINT := node_modules/.bin/lockfile-lint
 MAJESTIC := node_modules/.bin/majestic
 NODEMON := node_modules/.bin/nodemon
 PRETTIER := node_modules/.bin/prettier
-PRISMA := node_modules/.bin/prisma
 TSC := node_modules/.bin/tsc
 COLLECT_COVERAGE_FROM := ["src/**/*.{js,jsx,ts,tsx}"]
 
@@ -17,17 +16,19 @@ BUILD_DEPS := $(patsubst src/%.ts,lib/%.d.ts,$(shell find src -name '*.ts' -not 
 	$(patsubst src/%.tsx,lib/%.d.ts,$(shell find src -name '*.tsx'))
 BUILD_TARGET := $(BUILD_DEPS) lib
 
-FORMAT_DEPS := $(patsubst %,$(DONE)/_format/%,$(shell git ls-files | grep -E "((json)|(ya?ml)|(md)|([jt]sx?))$$"))
+FORMAT_DEPS := $(patsubst %,$(DONE)/_format/%,$(shell $(GIT) ls-files | grep -E "((json)|(ya?ml)|(md)|([jt]sx?))$$"))
 FORMAT_TARGET := $(FORMAT_DEPS) $(DONE)/format
 
-LINT_DEPS := $(patsubst %,$(DONE)/_lint/%,$(shell git ls-files | grep -E "([jt]sx?)$$"))
+LINT_DEPS := $(patsubst %,$(DONE)/_lint/%,$(shell $(GIT) ls-files | grep -E "([jt]sx?)$$"))
 LINT_TARGET := $(LINT_DEPS) $(DONE)/lint
 
-SPELLCHECK_DEPS := $(patsubst %,$(DONE)/_spellcheck/%,$(shell git ls-files))
+SPELLCHECK_DEPS := $(patsubst %,$(DONE)/_spellcheck/%,$(shell $(GIT) ls-files))
 SPELLCHECK_TARGET := $(SPELLCHECK_DEPS) $(DONE)/spellcheck
 
-TEST_DEPS := $(patsubst %,$(DONE)/_test/%,$(shell git ls-files | grep -E "([jt]sx?)$$"))
+TEST_DEPS := $(patsubst %,$(DONE)/_test/%,$(shell $(GIT) ls-files | grep -E "([jt]sx?)$$"))
 TEST_TARGET := $(TEST_DEPS) $(DONE)/test
+
+.EXPORT_ALL_VARIABLES:
 
 .PHONY: all
 all: build
@@ -137,61 +138,6 @@ test-watch: ~lint
 +test-watch:
 	@$(JEST) --watch $(ARGS)
 
-.PHONY: prisma-up
-prisma-up:
-	@$(PRISMA) migrate up --experimental
-
-.PHONY: prisma-save
-prisma-save:
-	@$(PRISMA) migrate save --experimental
-
-.PHONY: prisma-studio
-prisma-studio:
-	@$(PRISMA) studio --experimental
-
-.PHONY: prisma-generate-watch
-prisma-generate-watch:
-	@$(PRISMA) generate --watch
-
-.PHONY: seed +seed
-seed: prisma-up
-	@$(MAKE) -s +seed
-+seed:
-	@$(SHELL) prisma/scripts/wait-for-postgres.sh
-	@$(BABEL_NODE) --extensions '.ts,.tsx' prisma/seed.ts
-
-.PHONY: docker-build
-docker-build:
-	@$(MAKE) -C docker build
-
-.PHONY: docker-push
-docker-push:
-	@$(MAKE) -C docker push
-
-.PHONY: docker-pull
-docker-pull:
-	@$(MAKE) -C docker pull
-
-.PHONY: docker-ssh
-docker-ssh:
-	@$(MAKE) -C docker ssh
-
-.PHONY: docker-up
-docker-up:
-	@$(MAKE) -C docker up
-
-.PHONY: docker-clean
-docker-stop:
-	@$(MAKE) -C docker clean
-
-.PHONY: stop
-stop:
-	@$(MAKE) -C docker stop
-
-.PHONY: postgres
-postgres:
-	@$(MAKE) -C docker postgres
-
 .PHONY: start +start
 start: ~format
 	@$(MAKE) -s +start
@@ -209,14 +155,14 @@ env: .env
 clean: docker-clean
 	-@$(JEST) --clearCache
 ifeq ($(PLATFORM), win32)
-	-@git clean -fXd \
+	-@$(GIT) clean -fXd \
 		-e !node_modules \
 		-e !node_modules/**/* \
 		-e !yarn.lock \
 		-e !pnpm-lock.yaml \
 		-e !package-lock.json
 else
-	-@git clean -fXd \
+	-@$(GIT) clean -fXd \
 		-e \!node_modules \
 		-e \!node_modules/**/* \
 		-e \!yarn.lock \
@@ -229,11 +175,23 @@ endif
 
 .PHONY: purge
 purge: clean
-	-@git clean -fXd
+	-@$(GIT) clean -fXd
 
 .PHONY: report
 report: spellcheck lint test
 	@
+
+docker-%:
+	@$(MAKE) -s -C docker $(shell echo $@ | sed "s/docker-//")
+
+prisma-%:
+	@$(MAKE) -s -C prisma $(shell echo $@ | sed "s/prisma-//")
+
+.PHONY: postgres seed stop up
+stop: docker-stop
+postgres: docker-postgres
+up: docker-up
+seed: env prisma-seed
 
 %:
 	@

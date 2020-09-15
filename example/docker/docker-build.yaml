@@ -5,7 +5,7 @@ services:
     image: ${IMAGE}:latest
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/latest/Dockerfile
   major:
     extends: build
     image: ${IMAGE}:${MAJOR}

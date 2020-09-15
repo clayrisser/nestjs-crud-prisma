@@ -2,11 +2,12 @@ FROM node:12 AS builder
 
 RUN apt-get update && apt-get install -y \
   build-essential \
+  make \
   python
 
 WORKDIR /tmp/app
 
-COPY package*.json /tmp/app/
+COPY package*.json Makefile /tmp/app/
 RUN npm install
 
 FROM node:12-alpine
@@ -23,17 +24,14 @@ COPY --from=builder /tmp/app /opt/app
 WORKDIR /opt/app
 
 COPY . /opt/app/
-RUN npm run make -- env && \
-  npm run make -- +generate && \
-  npm run make -- +build
+RUN make env && \
+  make +generate && \
+  make +build
 
 EXPOSE 3000
 
 ENV DEBUG=0 \
- GRAPHQL_PLAYGROUND=0 \
- KEYCLOAK_BASE_URL=http://keycloak:8080 \
  POSTGRES_HOST=postgres \
- REDIS_HOST=redis \
  SWAGGER=0
 
 ENTRYPOINT [ "/usr/local/sbin/entrypoint" ]
