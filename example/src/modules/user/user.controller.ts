@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { Crud } from '@nestjsx/crud';
-import { User } from './user.entity';
 import { UserService } from './user.service';
+import { User } from '../../generated/type-graphql';
 
 @Crud({
   model: {

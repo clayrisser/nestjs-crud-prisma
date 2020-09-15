@@ -55,6 +55,8 @@
     "graphql": "^15.3.0",
     "graphql-fields": "^2.0.3",
     "graphql-type-json": "^0.3.2",
+    "nestjs-crud-prisma": "../nestjs-crud-prisma-v0.0.1.tgz",
+    "nestjs-prisma-module": "^0.0.1",
     "ora": "^5.1.0",
     "prisma-scripts": "^0.1.5",
     "reflect-metadata": "^0.1.13",

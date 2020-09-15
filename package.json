@@ -48,7 +48,12 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.11.2",
-    "core-js": "^3.6.5"
+    "@nestjs/common": "^7.4.4",
+    "@nestjs/swagger": "^4.6.0",
+    "@nestjsx/crud-request": "^4.6.2",
+    "core-js": "^3.6.5",
+    "lodash": "^4.17.20",
+    "nestjs-prisma-module": "^0.0.1"
   },
   "peerDependencies": {
     "@nestjsx/crud": "^4.6.2"
@@ -65,6 +70,7 @@
     "@babel/preset-typescript": "^7.10.4",
     "@nestjsx/crud": "^4.6.2",
     "@types/jest": "^26.0.13",
+    "@types/lodash": "^4.14.161",
     "@types/node": "^14.10.1",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
