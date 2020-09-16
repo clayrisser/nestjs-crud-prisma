@@ -19,15 +19,43 @@ export class PrismaCrudService<T> extends CrudService<T> {
   }
 
   async getMany(_req: CrudRequest): Promise<GetManyDefaultResponse<T> | T[]> {
-    return this.client.findMany();
+    console.log('_req', _req, _req.options.query);
+    return this.client.findMany({
+      orderBy: {
+        firstname: 'asc'
+      }
+    });
   }
 
-  async getOne(_req: CrudRequest): Promise<T> {
-    return {} as T;
+  async getOne(req: CrudRequest): Promise<T> {
+    console.log('_req', req);
+    const userID = req.parsed.paramsFilter[0];
+    console.log('id value', userID);
+
+    return this.client.findOne({
+      where: {
+        id: userID.value
+      }
+    });
+    // return {} as T;
   }
 
   async createOne(_req: CrudRequest, _dto: T): Promise<T> {
-    return {} as T;
+    console.log(
+      'create request',
+      _req,
+      _req.parsed.fields,
+      _req.options.params
+    );
+    return this.client.create({
+      data: {
+        email: 'testing1@gmail.com',
+        password: 'abc',
+        firstname: 'test user1',
+        role: 'USER'
+      }
+    });
+    // return {} as T;
   }
 
   async createMany(_req: CrudRequest, _dto: CreateManyDto): Promise<T[]> {
@@ -42,8 +70,14 @@ export class PrismaCrudService<T> extends CrudService<T> {
     return {} as T;
   }
 
-  async deleteOne(_req: CrudRequest): Promise<void | T> {
-    return {} as T;
+  async deleteOne(req: CrudRequest): Promise<void | T> {
+    const userID = req.parsed.paramsFilter[0];
+    return this.client.delete({
+      where: {
+        id: userID.value
+      }
+    });
+    // return {} as T;
   }
 }
 
