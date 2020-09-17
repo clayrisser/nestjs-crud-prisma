@@ -6,6 +6,13 @@ import { User } from '../../generated/type-graphql';
 @Crud({
   model: {
     type: User
+  },
+  params: {
+    id: {
+      field: 'id',
+      type: 'string',
+      primary: true
+    }
   }
 })
 @Controller('users')

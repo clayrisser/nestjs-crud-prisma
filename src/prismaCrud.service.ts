@@ -3,9 +3,14 @@ import {
   CrudRequest,
   GetManyDefaultResponse
 } from '@nestjsx/crud';
+import { QuerySort, QuerySortOperator } from '@nestjsx/crud-request';
 import camelcase from 'lodash/camelCase';
 import { PrismaService } from 'nestjs-prisma-module';
 import CrudService from './crudService';
+
+export interface OrderBy {
+  [key: string]: 'asc' | 'desc' | undefined;
+}
 
 export class PrismaCrudService<T> extends CrudService<T> {
   public tableName: string;
@@ -26,9 +31,22 @@ export class PrismaCrudService<T> extends CrudService<T> {
       // pagintated response
       const total = await this.client.count();
       const result = await this.client.findMany({
-        orderBy: {
-          firstname: 'asc'
-        }
+        ...(parsed.sort
+          ? {
+              orderBy: {
+                ...parsed.sort.reduce(
+                  (orderBy: OrderBy, querySort: QuerySort) => {
+                    orderBy[querySort.field] = (
+                      querySort.order || 'ASC'
+                    ).toLowerCase() as 'asc' | 'desc';
+                    return orderBy;
+                  },
+                  {}
+                )
+              }
+            }
+          : {}),
+        ...(parsed.limit ? { skip: parsed.limit } : {})
       });
       const response: GetManyDefaultResponse<T> = {
         data: result,
