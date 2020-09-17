@@ -6,9 +6,6 @@ import { User } from '../../generated/type-graphql';
 @Injectable()
 export class UserService extends PrismaCrudService<User> {
   constructor(prisma: PrismaService) {
-    const result = await prisma.user.findMany();
-    result.length;
-    const count = await prisma.user.count();
     super(prisma, User);
   }
 }
