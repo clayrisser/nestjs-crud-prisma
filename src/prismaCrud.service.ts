@@ -1,11 +1,11 @@
 import {
   CreateManyDto,
   CrudRequest,
-  CrudService,
   GetManyDefaultResponse
 } from '@nestjsx/crud';
 import camelcase from 'lodash/camelCase';
 import { PrismaService } from 'nestjs-prisma-module';
+import CrudService from './crudService';
 
 export class PrismaCrudService<T> extends CrudService<T> {
   public tableName: string;
@@ -18,8 +18,27 @@ export class PrismaCrudService<T> extends CrudService<T> {
     this.client = this.prisma[this.tableName];
   }
 
-  async getMany(_req: CrudRequest): Promise<GetManyDefaultResponse<T> | T[]> {
-    console.log('_req', _req, _req.options.query);
+  async getMany({
+    parsed,
+    options
+  }: CrudRequest): Promise<GetManyDefaultResponse<T> | T[]> {
+    if (this.decidePagination(parsed, options)) {
+      // pagintated response
+      const total = await this.client.count();
+      const result = await this.client.findMany({
+        orderBy: {
+          firstname: 'asc'
+        }
+      });
+      const response: GetManyDefaultResponse<T> = {
+        data: result,
+        count: result.length,
+        total,
+        page: 0,
+        pageCount: 1
+      };
+      return response;
+    }
     return this.client.findMany({
       orderBy: {
         firstname: 'asc'
