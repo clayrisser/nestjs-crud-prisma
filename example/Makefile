@@ -167,18 +167,18 @@ clean: docker-clean
 	-@$(JEST) --clearCache
 ifeq ($(PLATFORM), win32)
 	-@$(GIT) clean -fXd \
-		-e !node_modules \
-		-e !node_modules/**/* \
-		-e !yarn.lock \
-		-e !pnpm-lock.yaml \
-		-e !package-lock.json
+		-e !/*/node_modules \
+		-e !/*/node_modules/**/* \
+		-e !/*/yarn.lock \
+		-e !/*/pnpm-lock.yaml \
+		-e !/*/package-lock.json
 else
 	-@$(GIT) clean -fXd \
-		-e \!node_modules \
-		-e \!node_modules/**/* \
-		-e \!yarn.lock \
-		-e \!pnpm-lock.yaml \
-		-e \!package-lock.json
+		-e \!/*/node_modules \
+		-e \!/*/node_modules/**/* \
+		-e \!/*/yarn.lock \
+		-e \!/*/pnpm-lock.yaml \
+		-e \!/*/package-lock.json
 endif
 	-@$(RM) -rf node_modules/.cache
 	-@$(RM) -rf node_modules/.make
