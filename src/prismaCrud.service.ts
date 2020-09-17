@@ -3,13 +3,21 @@ import {
   CrudRequest,
   GetManyDefaultResponse
 } from '@nestjsx/crud';
-import { QuerySort, QuerySortOperator } from '@nestjsx/crud-request';
+import {
+  QuerySort,
+  QuerySortOperator,
+  QueryFilter
+} from '@nestjsx/crud-request';
 import camelcase from 'lodash/camelCase';
 import { PrismaService } from 'nestjs-prisma-module';
 import CrudService from './crudService';
 
 export interface OrderBy {
   [key: string]: 'asc' | 'desc' | undefined;
+}
+
+export interface Where {
+  [key: string]: string;
 }
 
 export class PrismaCrudService<T> extends CrudService<T> {
@@ -46,29 +54,53 @@ export class PrismaCrudService<T> extends CrudService<T> {
               }
             }
           : {}),
-        ...(parsed.limit ? { skip: parsed.limit } : {})
+        ...(parsed.filter
+          ? {
+              where: {
+                ...parsed.filter.reduce(
+                  (where: Where, queryFilter: QueryFilter) => {
+                    where[queryFilter.field] = queryFilter.value;
+                    return where;
+                  },
+                  {}
+                )
+              }
+            }
+          : {}),
+        ...(parsed.limit ? { take: parsed.limit } : {}),
+        ...(parsed.offset ? { skip: parsed.offset } : {})
       });
+      const { limit } = parsed;
+      const { offset } = parsed;
       const response: GetManyDefaultResponse<T> = {
         data: result,
         count: result.length,
         total,
-        page: 0,
-        pageCount: 1
+        page: limit && offset ? Math.floor(offset / limit) + 1 : 1,
+        pageCount: limit && total ? Math.ceil(result.length / limit) : 1
       };
+      console.log('response', response);
       return response;
     }
     return this.client.findMany({
-      orderBy: {
-        firstname: 'asc'
-      }
+      ...(parsed.filter
+        ? {
+            where: {
+              ...parsed.filter.reduce(
+                (where: Where, queryFilter: QueryFilter) => {
+                  where[queryFilter.field] = queryFilter.value;
+                  return where;
+                },
+                {}
+              )
+            }
+          }
+        : {})
     });
   }
 
   async getOne(req: CrudRequest): Promise<T> {
-    console.log('_req', req);
     const userID = req.parsed.paramsFilter[0];
-    console.log('id value', userID);
-
     return this.client.findOne({
       where: {
         id: userID.value
