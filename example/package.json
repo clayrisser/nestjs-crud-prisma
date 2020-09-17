@@ -58,7 +58,7 @@
     "nestjs-crud-prisma": "workspace:*",
     "nestjs-prisma-module": "^0.0.1",
     "ora": "^5.1.0",
-    "prisma-scripts": "0.1.6",
+    "prisma-scripts": "0.1.7",
     "reflect-metadata": "^0.1.13",
     "swagger-ui-express": "^4.1.4"
   },
