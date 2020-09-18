@@ -1,15 +1,15 @@
-datasource db {
-  provider = "postgresql"
-  url = "***"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
 generator typegraphql {
-  provider = "../node_modules/typegraphql-prisma-nestjs/generator.js"
+  provider = "../node_modules/typegraphql-prisma/generator.js"
   output   = "../src/generated/type-graphql"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = "***"
 }
 
 model User {

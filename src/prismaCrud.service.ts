@@ -35,43 +35,35 @@ export class PrismaCrudService<T> extends CrudService<T> {
     parsed,
     options
   }: CrudRequest): Promise<GetManyDefaultResponse<T> | T[]> {
+    const { limit, offset, filter, sort } = parsed;
     if (this.decidePagination(parsed, options)) {
-      // pagintated response
       const total = await this.client.count();
       const result = await this.client.findMany({
-        ...(parsed.sort
+        ...(sort
           ? {
               orderBy: {
-                ...parsed.sort.reduce(
-                  (orderBy: OrderBy, querySort: QuerySort) => {
-                    orderBy[querySort.field] = (
-                      querySort.order || 'ASC'
-                    ).toLowerCase() as 'asc' | 'desc';
-                    return orderBy;
-                  },
-                  {}
-                )
+                ...sort.reduce((orderBy: OrderBy, querySort: QuerySort) => {
+                  orderBy[querySort.field] = (
+                    querySort.order || 'ASC'
+                  ).toLowerCase() as 'asc' | 'desc';
+                  return orderBy;
+                }, {})
               }
             }
           : {}),
-        ...(parsed.filter
+        ...(filter
           ? {
               where: {
-                ...parsed.filter.reduce(
-                  (where: Where, queryFilter: QueryFilter) => {
-                    where[queryFilter.field] = queryFilter.value;
-                    return where;
-                  },
-                  {}
-                )
+                ...filter.reduce((where: Where, queryFilter: QueryFilter) => {
+                  where[queryFilter.field] = queryFilter.value;
+                  return where;
+                }, {})
               }
             }
           : {}),
-        ...(parsed.limit ? { take: parsed.limit } : {}),
-        ...(parsed.offset ? { skip: parsed.offset } : {})
+        ...(limit ? { take: limit } : {}),
+        ...(offset ? { skip: offset } : {})
       });
-      const { limit } = parsed;
-      const { offset } = parsed;
       const response: GetManyDefaultResponse<T> = {
         data: result,
         count: result.length,
@@ -79,23 +71,33 @@ export class PrismaCrudService<T> extends CrudService<T> {
         page: limit && offset ? Math.floor(offset / limit) + 1 : 1,
         pageCount: limit && total ? Math.ceil(result.length / limit) : 1
       };
-      console.log('response', response);
       return response;
     }
     return this.client.findMany({
-      ...(parsed.filter
+      ...(sort
         ? {
-            where: {
-              ...parsed.filter.reduce(
-                (where: Where, queryFilter: QueryFilter) => {
-                  where[queryFilter.field] = queryFilter.value;
-                  return where;
-                },
-                {}
-              )
+            orderBy: {
+              ...sort.reduce((orderBy: OrderBy, querySort: QuerySort) => {
+                orderBy[querySort.field] = (
+                  querySort.order || 'ASC'
+                ).toLowerCase() as 'asc' | 'desc';
+                return orderBy;
+              }, {})
             }
           }
-        : {})
+        : {}),
+      ...(filter
+        ? {
+            where: {
+              ...filter.reduce((where: Where, queryFilter: QueryFilter) => {
+                where[queryFilter.field] = queryFilter.value;
+                return where;
+              }, {})
+            }
+          }
+        : {}),
+      ...(limit ? { take: limit } : {}),
+      ...(offset ? { skip: offset } : {})
     });
   }
 

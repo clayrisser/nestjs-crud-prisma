@@ -6,17 +6,17 @@ PRISMA := ../node_modules/.bin/prisma
 WAIT_FOR_POSTGRES := ../node_modules/.bin/wait-for-postgres
 
 .PHONY: up
-up: generate postgres
+up: generate postgres migrations/migrate.lock
 	@$(WAIT_FOR_POSTGRES)
 	@$(PRISMA) migrate up --experimental
 
 .PHONY: down
-down: generate postgres
+down: generate postgres migrations/migrate.lock
 	@$(WAIT_FOR_POSTGRES)
 	@$(PRISMA) migrate down --experimental
 
 .PHONY: save
-save:
+save: generate postgres
 	@$(PRISMA) migrate save --experimental
 
 .PHONY: introspect
@@ -46,6 +46,9 @@ seed: up
 .PHONY: postgres
 postgres:
 	@$(MAKE) -s -C ../docker postgres ARGS="-d"
+
+migrations/migrate.lock:
+	@echo | $(PRISMA) migrate save --experimental
 
 %:
 	@
