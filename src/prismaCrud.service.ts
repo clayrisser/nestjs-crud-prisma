@@ -111,7 +111,7 @@ export class PrismaCrudService<T> extends CrudService<T> {
     // return {} as T;
   }
 
-  async createOne(_req: CrudRequest, _dto: T): Promise<T> {
+  async createOne(_req: CrudRequest, dto: T): Promise<T> {
     console.log(
       'create request',
       _req,
@@ -119,12 +119,7 @@ export class PrismaCrudService<T> extends CrudService<T> {
       _req.options.params
     );
     return this.client.create({
-      data: {
-        email: 'testing1@gmail.com',
-        password: 'abc',
-        firstname: 'test user1',
-        role: 'USER'
-      }
+      data: dto
     });
     // return {} as T;
   }
