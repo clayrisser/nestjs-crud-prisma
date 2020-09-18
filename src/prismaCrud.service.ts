@@ -17,7 +17,7 @@ export interface OrderBy {
 }
 
 export interface Where {
-  [key: string]: string;
+  [key: string]: any;
 }
 
 export class PrismaCrudService<T> extends CrudService<T> {
@@ -39,7 +39,7 @@ export class PrismaCrudService<T> extends CrudService<T> {
       // pagintated response
       const total = await this.client.count();
       const result = await this.client.findMany({
-        ...(parsed.sort
+        ...(parsed.sort.length > 0
           ? {
               orderBy: {
                 ...parsed.sort.reduce(
@@ -59,7 +59,12 @@ export class PrismaCrudService<T> extends CrudService<T> {
               where: {
                 ...parsed.filter.reduce(
                   (where: Where, queryFilter: QueryFilter) => {
-                    where[queryFilter.field] = queryFilter.value;
+                    where[queryFilter.field] =
+                      queryFilter.operator === '$starts'
+                        ? {
+                            startsWith: queryFilter.value
+                          }
+                        : {};
                     return where;
                   },
                   {}
@@ -88,7 +93,12 @@ export class PrismaCrudService<T> extends CrudService<T> {
             where: {
               ...parsed.filter.reduce(
                 (where: Where, queryFilter: QueryFilter) => {
-                  where[queryFilter.field] = queryFilter.value;
+                  where[queryFilter.field] =
+                    queryFilter.operator === '$starts'
+                      ? {
+                          startsWith: queryFilter.value
+                        }
+                      : {};
                   return where;
                 },
                 {}
