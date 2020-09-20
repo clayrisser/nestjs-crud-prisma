@@ -13,6 +13,9 @@ import { User } from '../../generated/type-graphql';
       type: 'string',
       primary: true
     }
+  },
+  query: {
+    alwaysPaginate: true
   }
 })
 @Controller('users')

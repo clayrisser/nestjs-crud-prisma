@@ -3,11 +3,7 @@ import {
   CrudRequest,
   GetManyDefaultResponse
 } from '@nestjsx/crud';
-import {
-  QuerySort,
-  QuerySortOperator,
-  QueryFilter
-} from '@nestjsx/crud-request';
+import { QuerySort, QueryFilter } from '@nestjsx/crud-request';
 import camelcase from 'lodash/camelCase';
 import { PrismaService } from 'nestjs-prisma-module';
 import CrudService from './crudService';
@@ -16,8 +12,14 @@ export interface OrderBy {
   [key: string]: 'asc' | 'desc' | undefined;
 }
 
+export interface Operator {
+  startsWith?: string | undefined;
+  contains?: string | undefined;
+  equals?: string | undefined;
+}
+
 export interface Where {
-  [key: string]: string;
+  [key: string]: string | Operator | Date;
 }
 
 export class PrismaCrudService<T> extends CrudService<T> {
@@ -35,35 +37,43 @@ export class PrismaCrudService<T> extends CrudService<T> {
     parsed,
     options
   }: CrudRequest): Promise<GetManyDefaultResponse<T> | T[]> {
-    const { limit, offset, filter, sort } = parsed;
     if (this.decidePagination(parsed, options)) {
+      // pagintated response
       const total = await this.client.count();
       const result = await this.client.findMany({
-        ...(sort
+        ...(parsed.sort.length > 0
           ? {
               orderBy: {
-                ...sort.reduce((orderBy: OrderBy, querySort: QuerySort) => {
-                  orderBy[querySort.field] = (
-                    querySort.order || 'ASC'
-                  ).toLowerCase() as 'asc' | 'desc';
-                  return orderBy;
-                }, {})
+                ...parsed.sort.reduce(
+                  (orderBy: OrderBy, querySort: QuerySort) => {
+                    orderBy[querySort.field] = (
+                      querySort.order || 'ASC'
+                    ).toLowerCase() as 'asc' | 'desc';
+                    return orderBy;
+                  },
+                  {}
+                )
               }
             }
           : {}),
-        ...(filter
+        ...(parsed.filter
           ? {
               where: {
-                ...filter.reduce((where: Where, queryFilter: QueryFilter) => {
-                  where[queryFilter.field] = queryFilter.value;
-                  return where;
-                }, {})
+                ...parsed.filter.reduce(
+                  (where: Where, queryFilter: QueryFilter) => {
+                    this.handleOperator(where, queryFilter);
+                    return where;
+                  },
+                  {}
+                )
               }
             }
           : {}),
-        ...(limit ? { take: limit } : {}),
-        ...(offset ? { skip: offset } : {})
+        ...(parsed.limit ? { take: parsed.limit } : {}),
+        ...(parsed.offset ? { skip: parsed.offset } : {})
       });
+      const { limit } = parsed;
+      const { offset } = parsed;
       const response: GetManyDefaultResponse<T> = {
         data: result,
         count: result.length,
@@ -74,31 +84,39 @@ export class PrismaCrudService<T> extends CrudService<T> {
       return response;
     }
     return this.client.findMany({
-      ...(sort
-        ? {
-            orderBy: {
-              ...sort.reduce((orderBy: OrderBy, querySort: QuerySort) => {
-                orderBy[querySort.field] = (
-                  querySort.order || 'ASC'
-                ).toLowerCase() as 'asc' | 'desc';
-                return orderBy;
-              }, {})
-            }
-          }
-        : {}),
-      ...(filter
+      ...(parsed.filter
         ? {
             where: {
-              ...filter.reduce((where: Where, queryFilter: QueryFilter) => {
-                where[queryFilter.field] = queryFilter.value;
-                return where;
-              }, {})
+              ...parsed.filter.reduce(
+                (where: Where, queryFilter: QueryFilter) => {
+                  this.handleOperator(where, queryFilter);
+                  return where;
+                },
+                {}
+              )
             }
           }
-        : {}),
-      ...(limit ? { take: limit } : {}),
-      ...(offset ? { skip: offset } : {})
+        : {})
     });
+  }
+
+  async handleOperator(where: Where, queryFilter: QueryFilter) {
+    switch (queryFilter.operator) {
+      case '$starts':
+        return (where[queryFilter.field] = {
+          startsWith: queryFilter.value
+        });
+      case '$cont':
+        return (where[queryFilter.field] = {
+          contains: queryFilter.value
+        });
+      case '$eq':
+        return (where[queryFilter.field] = {
+          equals: queryFilter.value
+        });
+      default:
+        return {};
+    }
   }
 
   async getOne(req: CrudRequest): Promise<T> {
@@ -108,28 +126,34 @@ export class PrismaCrudService<T> extends CrudService<T> {
         id: userID.value
       }
     });
-    // return {} as T;
   }
 
-  async createOne(_req: CrudRequest, dto: T): Promise<T> {
-    console.log(
-      'create request',
-      _req,
-      _req.parsed.fields,
-      _req.options.params
-    );
+  async createOne(req: CrudRequest, dto: T): Promise<T> {
     return this.client.create({
       data: dto
     });
-    // return {} as T;
   }
 
-  async createMany(_req: CrudRequest, _dto: CreateManyDto): Promise<T[]> {
-    return [];
+  async createMany(_req: CrudRequest, dto: CreateManyDto): Promise<T[]> {
+    const data = dto.bulk.map((item: any) => {
+      return this.client.create({
+        data: item
+      });
+    });
+    await data.map((item: any) => {
+      return item.then();
+    });
+    return dto.bulk;
   }
 
-  async updateOne(_req: CrudRequest, _dto: T): Promise<T> {
-    return {} as T;
+  async updateOne(req: CrudRequest, dto: T): Promise<T> {
+    const userID = req.parsed.paramsFilter[0];
+    return this.client.update({
+      where: {
+        id: userID.value
+      },
+      data: dto
+    });
   }
 
   async replaceOne(_req: CrudRequest, _dto: T): Promise<T> {
@@ -143,7 +167,6 @@ export class PrismaCrudService<T> extends CrudService<T> {
         id: userID.value
       }
     });
-    // return {} as T;
   }
 }
 
