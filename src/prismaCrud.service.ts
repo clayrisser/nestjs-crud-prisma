@@ -78,8 +78,8 @@ export class PrismaCrudService<T> extends CrudService<T> {
         data: result,
         count: result.length,
         total,
-        page: limit && offset ? Math.floor(offset / limit) + 1 : 1,
-        pageCount: limit && total ? Math.ceil(result.length / limit) : 1
+        page: limit ? Math.floor(offset / limit) + 1 : 1,
+        pageCount: limit && total ? Math.ceil(total / limit) : 1
       };
       return response;
     }
