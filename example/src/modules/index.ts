@@ -1,3 +1,5 @@
 import { UserModule } from './user';
 
-export default [UserModule];
+import { ConfigModule } from './configuration';
+
+export default [UserModule, ConfigModule];
