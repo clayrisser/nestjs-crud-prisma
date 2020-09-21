@@ -31,7 +31,7 @@ ssh:
 
 .PHONY: logs
 logs:
-	@docker-compose logs $(ARGS)
+	@docker-compose logs -f $(ARGS)
 
 .PHONY: up
 up:

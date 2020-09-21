@@ -159,7 +159,7 @@ start: ~format
 
 .PHONY: env
 env: .env
-.env:
+.env: example.env
 	@cp example.env .env
 
 .PHONY: clean
@@ -199,6 +199,7 @@ prisma-%:
 	@$(MAKE) -s -C prisma $(shell echo $@ | sed "s/prisma-//")
 
 .PHONY: postgres seed stop up
+logs: docker-logs
 postgres: docker-postgres
 save: env prisma-save
 seed: env prisma-seed
