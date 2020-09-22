@@ -51,6 +51,7 @@
     "@nestjs/common": "^7.4.4",
     "@nestjs/swagger": "^4.6.0",
     "@nestjsx/crud-request": "^4.6.2",
+    "@nestjsx/util": "^4.6.2",
     "core-js": "^3.6.5",
     "lodash": "^4.17.20",
     "nestjs-prisma-module": "^0.0.1"

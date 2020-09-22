@@ -3,10 +3,18 @@ import {
   CrudRequest,
   GetManyDefaultResponse
 } from '@nestjsx/crud';
-import { QuerySort, QueryFilter } from '@nestjsx/crud-request';
+import {
+  QuerySort,
+  QueryFilter,
+  SCondition,
+  SConditionKey,
+  ComparisonOperator
+} from '@nestjsx/crud-request';
 import camelcase from 'lodash/camelCase';
 import { PrismaService } from 'nestjs-prisma-module';
 import CrudService from './crudService';
+import { WhereInput, HashMap, PrismaFilter } from './types';
+import { isArrayFull, objKeys, isObject } from '@nestjsx/util';
 
 export interface OrderBy {
   [key: string]: 'asc' | 'desc' | undefined;
@@ -37,8 +45,12 @@ export class PrismaCrudService<T> extends CrudService<T> {
     parsed,
     options
   }: CrudRequest): Promise<GetManyDefaultResponse<T> | T[]> {
+    console.log('search', JSON.stringify(parsed.search, null, 2));
+    console.log(
+      'where',
+      JSON.stringify(this.getWhereInputFromSearch(parsed.search), null, 2)
+    );
     if (this.decidePagination(parsed, options)) {
-      // pagintated response
       const total = await this.client.count();
       const result = await this.client.findMany({
         ...(parsed.sort.length > 0
@@ -56,24 +68,25 @@ export class PrismaCrudService<T> extends CrudService<T> {
               }
             }
           : {}),
+        ...(parsed.or
+          ? {
+              where: this.getWhereInputFromOr(parsed.or)
+            }
+          : {}),
         ...(parsed.filter
           ? {
-              where: {
-                ...parsed.filter.reduce(
-                  (where: Where, queryFilter: QueryFilter) => {
-                    this.handleOperator(where, queryFilter);
-                    return where;
-                  },
-                  {}
-                )
-              }
+              where: this.getWhereInputFromFilter(parsed.filter)
+            }
+          : {}),
+        ...(parsed.search
+          ? {
+              where: this.getWhereInputFromSearch(parsed.search)
             }
           : {}),
         ...(parsed.limit ? { take: parsed.limit } : {}),
         ...(parsed.offset ? { skip: parsed.offset } : {})
       });
-      const { limit } = parsed;
-      const { offset } = parsed;
+      const { limit, offset } = parsed;
       const response: GetManyDefaultResponse<T> = {
         data: result,
         count: result.length,
@@ -84,36 +97,166 @@ export class PrismaCrudService<T> extends CrudService<T> {
       return response;
     }
     return this.client.findMany({
+      ...(parsed.or
+        ? {
+            where: this.getWhereInputFromOr(parsed.or)
+          }
+        : {}),
       ...(parsed.filter
         ? {
-            where: {
-              ...parsed.filter.reduce(
-                (where: Where, queryFilter: QueryFilter) => {
-                  this.handleOperator(where, queryFilter);
-                  return where;
+            where: this.getWhereInputFromFilter(parsed.filter)
+          }
+        : {}),
+      ...(parsed.search
+        ? {
+            where: this.getWhereInputFromSearch(parsed.search)
+          }
+        : {}),
+      ...(parsed.sort.length > 0
+        ? {
+            orderBy: {
+              ...parsed.sort.reduce(
+                (orderBy: OrderBy, querySort: QuerySort) => {
+                  orderBy[querySort.field] = (
+                    querySort.order || 'ASC'
+                  ).toLowerCase() as 'asc' | 'desc';
+                  return orderBy;
                 },
                 {}
               )
             }
           }
-        : {})
+        : {}),
+      ...(parsed.limit ? { take: parsed.limit } : {})
     });
   }
 
-  async handleOperator(where: Where, queryFilter: QueryFilter) {
+  protected getWhereInputFromFilter(filter: QueryFilter[]): WhereInput {
+    return this.getWhereInputFromSearch({ $and: filter });
+  }
+
+  protected getWhereInputFromOr(or: QueryFilter[]): WhereInput {
+    return this.getWhereInputFromSearch({ $or: or });
+  }
+
+  protected getWhereInputFromSearch(search: SCondition): WhereInput {
+    if (isObject(search)) {
+      const keys = objKeys(search);
+      if (keys.length) {
+        if (isArrayFull(search.$and)) {
+          return {
+            AND: (search.$and || []).map((searchItem: SCondition) =>
+              this.getWhereInputFromSearch(searchItem)
+            )
+          };
+        } else if (isArrayFull(search.$or)) {
+          if (Object.keys(search).length > 1) {
+            return this.getWhereInputFromSearch({
+              $and: [
+                ...Object.entries(search).map(
+                  ([key, searchItem]: [string, any]) => {
+                    // TODO: need to look further
+                    return { [key]: searchItem };
+                  }
+                ),
+                { $or: search.$or }
+              ]
+            });
+          }
+          return {
+            OR: (search.$or || []).map((searchItem: SCondition) =>
+              this.getWhereInputFromSearch(searchItem)
+            )
+          };
+        }
+        return keys.reduce((whereInput: WhereInput, field: string) => {
+          const value = (search as HashMap)[field];
+          if (isObject(value)) {
+            const keysSet = new Set(Object.keys(value));
+            if (keysSet.has('$and') || keysSet.has('$or')) {
+              const operator = keysSet.has('$and') ? '$and' : '$or';
+              whereInput[field] = this.getWhereInputFromSearch(value[operator]);
+              return whereInput;
+            }
+            let queryFilter: QueryFilter = value;
+            if (
+              typeof value.operator === 'undefined' ||
+              typeof value.value === 'undefined' ||
+              typeof value.field === 'undefined'
+            ) {
+              const key = Object.keys(value).find(
+                (key: string) => key.length && key[0] === '$'
+              );
+              if (!key) return {};
+              queryFilter = {
+                field,
+                operator: key as ComparisonOperator,
+                value: value[key]
+              };
+            }
+            whereInput[field] = this.getFilter(queryFilter);
+            return whereInput;
+          }
+          whereInput[field] = this.getFilter({
+            field,
+            value,
+            operator: '$eq'
+          });
+          return whereInput;
+        }, {});
+      }
+    }
+    return {};
+  }
+
+  protected getFilter(queryFilter: QueryFilter): PrismaFilter {
     switch (queryFilter.operator) {
-      case '$starts':
-        return (where[queryFilter.field] = {
-          startsWith: queryFilter.value
-        });
-      case '$cont':
-        return (where[queryFilter.field] = {
-          contains: queryFilter.value
-        });
       case '$eq':
-        return (where[queryFilter.field] = {
-          equals: queryFilter.value
-        });
+        return { equals: queryFilter.value };
+      case '$ne':
+        return { not: queryFilter.value };
+      case '$gt':
+        return { gt: queryFilter.value };
+      case '$lt':
+        return { lt: queryFilter.value };
+      case '$gte':
+        return { gte: queryFilter.value };
+      case '$lte':
+        return { lte: queryFilter.value };
+      case '$starts':
+        return { startsWith: queryFilter.value };
+      case '$ends':
+        return { endsWith: queryFilter.value };
+      case '$cont':
+        return { contains: queryFilter.value };
+      case '$excl':
+        return {};
+      case '$in':
+        return { in: queryFilter.value };
+      case '$notin':
+        return { notIn: queryFilter.value };
+      case '$isnull':
+        return {};
+      case '$notnull':
+        return {};
+      case '$between':
+        return {};
+      case '$eqL':
+        return {};
+      case '$neL':
+        return {};
+      case '$startsL':
+        return {};
+      case '$endsL':
+        return {};
+      case '$contL':
+        return {};
+      case '$exclL':
+        return {};
+      case '$inL':
+        return {};
+      case '$notinL':
+        return {};
       default:
         return {};
     }
