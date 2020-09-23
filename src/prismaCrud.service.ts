@@ -12,9 +12,10 @@ import {
 } from '@nestjsx/crud-request';
 import camelcase from 'lodash/camelCase';
 import { PrismaService } from 'nestjs-prisma-module';
+import { isArrayFull, objKeys, isObject } from '@nestjsx/util';
+import mapSeriesAsync from 'map-series-async';
 import CrudService from './crudService';
 import { WhereInput, HashMap, PrismaFilter } from './types';
-import { isArrayFull, objKeys, isObject } from '@nestjsx/util';
 
 export interface OrderBy {
   [key: string]: 'asc' | 'desc' | undefined;
@@ -35,10 +36,21 @@ export class PrismaCrudService<T> extends CrudService<T> {
 
   public client: PrismaClient;
 
+  private columns: string[] | undefined;
+
   constructor(public prisma: PrismaService, entity: Function) {
     super();
     this.tableName = camelcase(entity.name);
     this.client = this.prisma[this.tableName];
+    this.getColumns();
+  }
+
+  async getColumns(): Promise<string[]> {
+    if (this.columns) return this.columns;
+    this.columns = Object.keys(
+      (await this.client.findMany({ take: 1 }))?.[0] || {}
+    );
+    return this.columns;
   }
 
   async getMany({
@@ -48,7 +60,7 @@ export class PrismaCrudService<T> extends CrudService<T> {
     console.log('search', JSON.stringify(parsed.search, null, 2));
     console.log(
       'where',
-      JSON.stringify(this.getWhereInputFromSearch(parsed.search), null, 2)
+      JSON.stringify(await this.getWhereInputFromSearch(parsed.search), null, 2)
     );
     if (this.decidePagination(parsed, options)) {
       const total = await this.client.count();
@@ -70,17 +82,17 @@ export class PrismaCrudService<T> extends CrudService<T> {
           : {}),
         ...(parsed.or
           ? {
-              where: this.getWhereInputFromOr(parsed.or)
+              where: await this.getWhereInputFromOr(parsed.or)
             }
           : {}),
         ...(parsed.filter
           ? {
-              where: this.getWhereInputFromFilter(parsed.filter)
+              where: await this.getWhereInputFromFilter(parsed.filter)
             }
           : {}),
         ...(parsed.search
           ? {
-              where: this.getWhereInputFromSearch(parsed.search)
+              where: await this.getWhereInputFromSearch(parsed.search)
             }
           : {}),
         ...(parsed.limit ? { take: parsed.limit } : {}),
@@ -99,17 +111,17 @@ export class PrismaCrudService<T> extends CrudService<T> {
     return this.client.findMany({
       ...(parsed.or
         ? {
-            where: this.getWhereInputFromOr(parsed.or)
+            where: await this.getWhereInputFromOr(parsed.or)
           }
         : {}),
       ...(parsed.filter
         ? {
-            where: this.getWhereInputFromFilter(parsed.filter)
+            where: await this.getWhereInputFromFilter(parsed.filter)
           }
         : {}),
       ...(parsed.search
         ? {
-            where: this.getWhereInputFromSearch(parsed.search)
+            where: await this.getWhereInputFromSearch(parsed.search)
           }
         : {}),
       ...(parsed.sort.length > 0
@@ -131,25 +143,32 @@ export class PrismaCrudService<T> extends CrudService<T> {
     });
   }
 
-  protected getWhereInputFromFilter(filter: QueryFilter[]): WhereInput {
+  protected async getWhereInputFromFilter(
+    filter: QueryFilter[]
+  ): Promise<WhereInput> {
     return this.getWhereInputFromSearch({ $and: filter });
   }
 
-  protected getWhereInputFromOr(or: QueryFilter[]): WhereInput {
+  protected async getWhereInputFromOr(or: QueryFilter[]): Promise<WhereInput> {
     return this.getWhereInputFromSearch({ $or: or });
   }
 
-  protected getWhereInputFromSearch(search: SCondition): WhereInput {
+  protected async getWhereInputFromSearch(
+    search: SCondition
+  ): Promise<WhereInput> {
     if (isObject(search)) {
       const keys = objKeys(search);
       if (keys.length) {
         if (isArrayFull(search.$and)) {
           return {
-            AND: (search.$and || []).map((searchItem: SCondition) =>
-              this.getWhereInputFromSearch(searchItem)
+            AND: await Promise.all(
+              (search.$and || []).map((searchItem: SCondition) =>
+                this.getWhereInputFromSearch(searchItem)
+              )
             )
           };
-        } else if (isArrayFull(search.$or)) {
+        }
+        if (isArrayFull(search.$or)) {
           if (Object.keys(search).length > 1) {
             return this.getWhereInputFromSearch({
               $and: [
@@ -164,18 +183,32 @@ export class PrismaCrudService<T> extends CrudService<T> {
             });
           }
           return {
-            OR: (search.$or || []).map((searchItem: SCondition) =>
-              this.getWhereInputFromSearch(searchItem)
+            OR: await Promise.all(
+              (search.$or || []).map((searchItem: SCondition) =>
+                this.getWhereInputFromSearch(searchItem)
+              )
             )
           };
         }
-        return keys.reduce((whereInput: WhereInput, field: string) => {
+        const columns = await this.getColumns();
+        console.log('columns', columns);
+        const whereInput: WhereInput = {};
+        await mapSeriesAsync(keys, async (field: string) => {
           const value = (search as HashMap)[field];
+          if (field === 'q') {
+            return this.getWhereInputFromSearch({
+              $or: columns.map((column: string) => {
+                return { [column]: value };
+              })
+            });
+          }
           if (isObject(value)) {
             const keysSet = new Set(Object.keys(value));
             if (keysSet.has('$and') || keysSet.has('$or')) {
               const operator = keysSet.has('$and') ? '$and' : '$or';
-              whereInput[field] = this.getWhereInputFromSearch(value[operator]);
+              whereInput[field] = await this.getWhereInputFromSearch(
+                value[operator]
+              );
               return whereInput;
             }
             let queryFilter: QueryFilter = value;
@@ -184,8 +217,8 @@ export class PrismaCrudService<T> extends CrudService<T> {
               typeof value.value === 'undefined' ||
               typeof value.field === 'undefined'
             ) {
-              const key = Object.keys(value).find(
-                (key: string) => key.length && key[0] === '$'
+              const key = Object.keys(value).find((key: string) =>
+                this.operatorSet.has(key)
               );
               if (!key) return {};
               queryFilter = {
@@ -203,14 +236,19 @@ export class PrismaCrudService<T> extends CrudService<T> {
             operator: '$eq'
           });
           return whereInput;
-        }, {});
+        });
+        return whereInput;
       }
     }
     return {};
   }
 
   protected getFilter(queryFilter: QueryFilter): PrismaFilter {
-    switch (queryFilter.operator) {
+    const operator =
+      queryFilter.operator[0] === '$'
+        ? queryFilter.operator
+        : `$${queryFilter.operator}`;
+    switch (operator) {
       case '$eq':
         return { equals: queryFilter.value };
       case '$ne':
@@ -261,6 +299,8 @@ export class PrismaCrudService<T> extends CrudService<T> {
         return {};
     }
   }
+
+  protected operatorSet = new Set(['$eq', '$ne', 'cont', '$cont']);
 
   async getOne(req: CrudRequest): Promise<T> {
     const userID = req.parsed.paramsFilter[0];
