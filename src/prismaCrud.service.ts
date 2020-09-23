@@ -57,11 +57,6 @@ export class PrismaCrudService<T> extends CrudService<T> {
     parsed,
     options
   }: CrudRequest): Promise<GetManyDefaultResponse<T> | T[]> {
-    console.log('search', JSON.stringify(parsed.search, null, 2));
-    console.log(
-      'where',
-      JSON.stringify(await this.getWhereInputFromSearch(parsed.search), null, 2)
-    );
     if (this.decidePagination(parsed, options)) {
       const total = await this.client.count();
       const result = await this.client.findMany({
@@ -182,25 +177,26 @@ export class PrismaCrudService<T> extends CrudService<T> {
               ]
             });
           }
-          return {
+          const result = {
             OR: await Promise.all(
               (search.$or || []).map((searchItem: SCondition) =>
                 this.getWhereInputFromSearch(searchItem)
               )
             )
           };
+          return result;
         }
         const columns = await this.getColumns();
-        console.log('columns', columns);
-        const whereInput: WhereInput = {};
+        let whereInput: WhereInput = {};
         await mapSeriesAsync(keys, async (field: string) => {
           const value = (search as HashMap)[field];
           if (field === 'q') {
-            return this.getWhereInputFromSearch({
+            whereInput = await this.getWhereInputFromSearch({
               $or: columns.map((column: string) => {
                 return { [column]: value };
               })
             });
+            return;
           }
           if (isObject(value)) {
             const keysSet = new Set(Object.keys(value));
@@ -209,7 +205,7 @@ export class PrismaCrudService<T> extends CrudService<T> {
               whereInput[field] = await this.getWhereInputFromSearch(
                 value[operator]
               );
-              return whereInput;
+              return;
             }
             let queryFilter: QueryFilter = value;
             if (
@@ -220,7 +216,10 @@ export class PrismaCrudService<T> extends CrudService<T> {
               const key = Object.keys(value).find((key: string) =>
                 this.operatorSet.has(key)
               );
-              if (!key) return {};
+              if (!key) {
+                whereInput = {};
+                return;
+              }
               queryFilter = {
                 field,
                 operator: key as ComparisonOperator,
@@ -228,14 +227,13 @@ export class PrismaCrudService<T> extends CrudService<T> {
               };
             }
             whereInput[field] = this.getFilter(queryFilter);
-            return whereInput;
+            return;
           }
           whereInput[field] = this.getFilter({
             field,
             value,
             operator: '$eq'
           });
-          return whereInput;
         });
         return whereInput;
       }
