@@ -20,7 +20,9 @@ npm install --save nestjs-crud-prisma
 
 ## Usage
 
-1. Setup prisma to support generating typegraphql
+1. Setup prisma to support generating typegraphql.
+
+    > This step is not required but recommended. Typegraphql will generate the models from the _schema.prisma_ that we will send to the nestjs-crud-service.
 
     _[schema.prisma](example/prisma/schema.prisma)_
     ```
