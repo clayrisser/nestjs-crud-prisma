@@ -35,6 +35,7 @@ npm install --save nestjs-crud-prisma
 2. Create a service that injects the prisma service.
 
     > Although it's not required, I recommend [nestjs-prisma](https://www.npmjs.com/package/nestjs-prisma) to get the prisma service.
+    > Also, notice I'm getting the model from the generated typegraphql.
 
     _[user.service.ts](example/src/modules/user/user.service.ts)_
     ```ts
