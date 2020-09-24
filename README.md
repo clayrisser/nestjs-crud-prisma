@@ -22,19 +22,19 @@ npm install --save nestjs-crud-prisma
 
 1. Setup prisma to support generating typegraphql
 
-    _schema.prisma_
+    _[schema.prisma](example/prisma/schema.prisma)_
     ```
     generator typegraphql {
       provider = "../node_modules/typegraphql-prisma/generator.js"
       output   = "../src/generated/type-graphql"
     }
     ```
-    [prisma/schema.prisma](example/prisma/schema.prisma)
 
 2. Create a service that injects the prisma service.
 
     > Although it's not required, I recommend [nestjs-prisma](https://www.npmjs.com/package/nestjs-prisma) to get the prisma service.
 
+    _[user.service.ts](example/src/modules/user/user.service.ts)__
     ```ts
     import { Injectable } from '@nestjs/common';
     import { PrismaCrudService } from 'nestjs-crud-prisma';
@@ -48,10 +48,10 @@ npm install --save nestjs-crud-prisma
       }
     }
     ```
-    [src/modules/user/user.service.ts](example/src/modules/user/user.service.ts)
 
 3. Create a crud controller that injects the previous service.
 
+    _[user.controller.ts](example/src/modules/user/user.controller.ts)_
     ```ts
     import { Controller } from '@nestjs/common';
     import { Crud } from '@nestjsx/crud';
@@ -78,7 +78,6 @@ npm install --save nestjs-crud-prisma
       constructor(public service: UserService) {}
     }
     ```
-    [src/modules/user/user.controller.ts](example/src/modules/user/user.controller.ts)
 
 ## Support
 
