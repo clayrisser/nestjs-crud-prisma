@@ -34,7 +34,7 @@ npm install --save nestjs-crud-prisma
 
     > Although it's not required, I recommend [nestjs-prisma](https://www.npmjs.com/package/nestjs-prisma) to get the prisma service.
 
-    _[user.service.ts](example/src/modules/user/user.service.ts)__
+    _[user.service.ts](example/src/modules/user/user.service.ts)_
     ```ts
     import { Injectable } from '@nestjs/common';
     import { PrismaCrudService } from 'nestjs-crud-prisma';
