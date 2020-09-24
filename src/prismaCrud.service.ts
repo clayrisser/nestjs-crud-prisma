@@ -7,7 +7,6 @@ import {
   QuerySort,
   QueryFilter,
   SCondition,
-  SConditionKey,
   ComparisonOperator
 } from '@nestjsx/crud-request';
 import camelcase from 'lodash/camelCase';
@@ -309,22 +308,20 @@ export class PrismaCrudService<T> extends CrudService<T> {
     });
   }
 
-  async createOne(req: CrudRequest, dto: T): Promise<T> {
+  async createOne(_req: CrudRequest, dto: T): Promise<T> {
     return this.client.create({
       data: dto
     });
   }
 
   async createMany(_req: CrudRequest, dto: CreateManyDto): Promise<T[]> {
-    const data = dto.bulk.map((item: any) => {
-      return this.client.create({
-        data: item
-      });
-    });
-    await data.map((item: any) => {
-      return item.then();
-    });
-    return dto.bulk;
+    return Promise.all(
+      dto.bulk.map((item: any) => {
+        return this.client.create({
+          data: item
+        });
+      })
+    );
   }
 
   async updateOne(req: CrudRequest, dto: T): Promise<T> {
