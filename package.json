@@ -1,6 +1,6 @@
 {
   "name": "nestjs-crud-prisma",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "crud for restful apis built with nestjs and prisma",
   "keywords": [
     "nestjs-crud-prisma",
