@@ -297,7 +297,54 @@ export class PrismaCrudService<T> extends CrudService<T> {
     }
   }
 
-  protected operatorSet = new Set(['$eq', '$ne', 'cont', '$cont']);
+  protected operatorSet = new Set([
+    '$eq',
+    '$ne',
+    '$cont',
+    '$gt',
+    '$lt',
+    '$gte',
+    '$lte',
+    '$starts',
+    '$ends',
+    '$in',
+    '$notin',
+    '$excl',
+    '$isnull',
+    '$notnull',
+    '$between',
+    '$eqL',
+    '$neL',
+    '$startsL',
+    '$endsL',
+    '$contL',
+    '$exclL',
+    '$inL',
+    '$notinL',
+    'eq',
+    'ne',
+    'cont',
+    'gt',
+    'lt',
+    'gte',
+    'lte',
+    'starts',
+    'ends',
+    'in',
+    'notin',
+    'excl',
+    'isnull',
+    'notnull',
+    'between',
+    'eqL',
+    'neL',
+    'startsL',
+    'endsL',
+    'contL',
+    'exclL',
+    'inL',
+    'notinL'
+  ]);
 
   async getOne(req: CrudRequest): Promise<T> {
     const userID = req.parsed.paramsFilter[0];
