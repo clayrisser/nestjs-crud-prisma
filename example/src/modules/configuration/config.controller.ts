@@ -18,7 +18,7 @@ import { Configuration } from '../../generated/type-graphql';
     alwaysPaginate: true
   }
 })
-@Controller('config')
+@Controller('configurations')
 export class ConfigController {
   constructor(public service: ConfigService) {}
 }
