@@ -53,9 +53,10 @@
     "@nestjsx/crud-request": "^4.6.2",
     "@nestjsx/util": "^4.6.2",
     "core-js": "^3.6.5",
+    "deepmerge": "^4.2.2",
     "lodash": "^4.17.20",
     "map-series-async": "^0.0.1",
-    "nestjs-prisma-module": "^0.0.1"
+    "nestjs-prisma-module": "^0.0.4"
   },
   "peerDependencies": {
     "@nestjsx/crud": "^4.6.2"
