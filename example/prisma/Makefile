@@ -5,19 +5,20 @@ GENERATE_PRISMA := ../node_modules/.bin/generate-prisma
 PRISMA := ../node_modules/.bin/prisma
 WAIT_FOR_POSTGRES := ../node_modules/.bin/wait-for-postgres
 
-.PHONY: up
-up: generate postgres migrations/migrate.lock
-	@$(WAIT_FOR_POSTGRES)
-	@$(PRISMA) migrate up --experimental
+.PHONY: deploy
+deploy: generate postgres migrations/*/migration.sql
+	@$(PRISMA) migrate deploy --preview-feature
 
-.PHONY: down
-down: generate postgres migrations/migrate.lock
-	@$(WAIT_FOR_POSTGRES)
-	@$(PRISMA) migrate down --experimental
+.PHONY: dev
+dev: postgres env
+	@echo | $(PRISMA) migrate dev --preview-feature $(ARGS)
 
-.PHONY: save
-save: generate postgres
-	@$(PRISMA) migrate save --experimental
+.PHONY: env
+env: .env
+.env: ../.env
+	@$(GENERATE_PRISMA) ..
+../.env:
+	@$(MAKE) -s -C .. env
 
 .PHONY: introspect
 introspect:
@@ -29,26 +30,27 @@ format:
 
 .PHONY: studio
 studio:
-	@$(PRISMA) studio --experimental
+	@$(PRISMA) studio
 
 .PHONY: generate
 generate:
-	@$(GENERATE_PRISMA) ..
+	@$(PRISMA) generate
 
 .PHONY: generate-watch
 generate-watch:
 	@$(PRISMA) generate --watch
 
 .PHONY: seed
-seed: up
+seed: dev
 	@$(BABEL_NODE) --extensions '.ts,.tsx' seed.ts
 
 .PHONY: postgres
-postgres:
+postgres: env
 	@$(MAKE) -s -C ../docker postgres ARGS="-d"
+	@$(WAIT_FOR_POSTGRES)
 
-migrations/migrate.lock:
-	@echo | $(PRISMA) migrate save --experimental
+migrations/%/migration.sql:
+	@$(MAKE) -s dev ARGS="--create-only"
 
 %:
 	@

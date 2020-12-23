@@ -201,7 +201,6 @@ prisma-%:
 .PHONY: postgres seed stop up
 logs: docker-logs
 postgres: docker-postgres
-save: env prisma-save
 seed: env prisma-seed
 stop: docker-stop
 studio: env prisma-studio

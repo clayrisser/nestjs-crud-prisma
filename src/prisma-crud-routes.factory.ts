@@ -12,7 +12,7 @@ import {
   isNil,
   isUndefined
 } from '@nestjsx/util';
-import * as deepmerge from 'deepmerge';
+import deepmerge from 'deepmerge';
 
 import { R } from '@nestjsx/crud/lib/crud/reflection.helper';
 import { SerializeHelper } from '@nestjsx/crud/lib/crud/serialize.helper';
@@ -94,10 +94,13 @@ export class PrismaCrudRoutesFactory {
 
     // merge routes config
     const routes = isObjectFull(this.options.routes) ? this.options.routes : {};
-    this.options.routes = deepmerge(CrudConfigService.config.routes, routes, {
-      // @ts-ignore
-      arrayMerge: (a, b, c) => b
-    });
+    this.options.routes = deepmerge(
+      CrudConfigService.config.routes as any,
+      routes as any,
+      {
+        arrayMerge: (_a, b, _c) => b
+      }
+    );
 
     // set params
     this.options.params = isObjectFull(this.options.params)
@@ -296,7 +299,6 @@ export class PrismaCrudRoutesFactory {
 
   // @ts-ignore
   private setResponseModels() {
-    console.log('setResponseModels custom');
     const prismaModelType = isFunction(this.modelType)
       ? this.modelType
       : SerializeHelper.createGetOneResponseDto(this.modelName);
@@ -334,13 +336,11 @@ export class PrismaCrudRoutesFactory {
   }
 
   private createModelType(modelType: any) {
-    modelType._OPENAPI_METADATA_FACTORY = () => {
-      return {
-        id: { required: false, type: () => Number },
-        Name: { required: false, type: () => String },
-        age: { required: false, type: () => Number }
-      };
-    };
+    modelType._OPENAPI_METADATA_FACTORY = () => ({
+      Name: { required: false, type: () => String },
+      age: { required: false, type: () => Number },
+      id: { required: false, type: () => Number }
+    });
   }
 
   private createRoutes(routesSchema: BaseRoute[]) {
@@ -468,9 +468,8 @@ export class PrismaCrudRoutesFactory {
 
   private getPrimaryParams(): string[] {
     return objKeys(this.options.params).filter(
-      // @ts-ignore
       (param) =>
-        this.options.params[param] && this.options.params[param].primary
+        this.options.params?.[param] && this.options.params[param].primary
     );
   }
 
@@ -581,7 +580,7 @@ export class PrismaCrudRoutesFactory {
             // @ts-ignore
             this.options.params[c].primary
               ? a
-              : { ...a, [c]: this.options.params[c] },
+              : { ...a, [c]: this.options.params?.[c] },
           {}
         )
       : this.options.params;

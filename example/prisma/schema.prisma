@@ -1,19 +1,21 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  output        = "../node_modules/@prisma/client"
+  binaryTargets = ["native"]
 }
 
 generator typegraphql {
-  provider = "../node_modules/typegraphql-prisma/generator.js"
+  provider = "../node_modules/.bin/typegraphql-prisma"
   output   = "../src/generated/type-graphql"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("POSTGRES_URL")
+  url      = env("GENERATED_POSTGRES_URL")
 }
 
 model User {
-  id        String   @default(cuid()) @id
+  id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   email     String   @unique
@@ -24,7 +26,7 @@ model User {
 }
 
 model Configuration {
-  id           String @default(cuid()) @id
+  id           String @id @default(cuid())
   name         String
   serialNumber String
   type         String
