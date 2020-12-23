@@ -30,12 +30,23 @@ export interface Where {
   [key: string]: string | Operator | Date;
 }
 
+export enum ColumnType {
+  String = 'STRING',
+  DateTime = 'DATE_TIME',
+  Boolean = 'BOOLEAN',
+  Int = 'INT'
+}
+
+export interface ColumnTypes {
+  [key: string]: ColumnType;
+}
+
 export class PrismaCrudService<T> extends CrudService<T> {
   public tableName: string;
 
   public client: PrismaClient;
 
-  private columns: string[] | undefined;
+  private columns: ColumnTypes | undefined;
 
   constructor(public prisma: PrismaService, entity: Function) {
     super();
@@ -44,12 +55,32 @@ export class PrismaCrudService<T> extends CrudService<T> {
     this.getColumns();
   }
 
-  async getColumns(): Promise<string[]> {
+  async getColumns(): Promise<ColumnTypes> {
     if (this.columns) return this.columns;
-    this.columns = Object.keys(
-      (await this.client.findMany({ take: 1 }))?.[0] || {}
+    const result = (await this.client.findMany({ take: 1 }))?.[0] || {};
+    this.columns = Object.entries(result).reduce(
+      (columns: ColumnTypes, [key, value]: [string, any]) => {
+        columns[key] = this.getColumnTypeFromValue(value);
+        return columns;
+      },
+      {}
     );
     return this.columns;
+  }
+
+  getColumnTypeFromValue(value: any): ColumnType {
+    switch (typeof value) {
+      case 'string':
+        return ColumnType.String;
+      case 'object':
+        return ColumnType.DateTime;
+      case 'boolean':
+        return ColumnType.Boolean;
+      case 'number':
+        return ColumnType.Int;
+      default:
+        return ColumnType.String;
+    }
   }
 
   async getMany({
@@ -191,9 +222,16 @@ export class PrismaCrudService<T> extends CrudService<T> {
           const value = (search as HashMap)[field];
           if (field === 'q') {
             whereInput = await this.getWhereInputFromSearch({
-              $or: columns.map((column: string) => {
-                return { [column]: value };
-              })
+              $or: Object.keys(columns).reduce(
+                ($or: any[], columnKey: string) => {
+                  const columnType = columns[columnKey];
+                  if (columnType === ColumnType.String) {
+                    $or.push({ [columnKey]: value });
+                  }
+                  return $or;
+                },
+                []
+              )
             });
             return;
           }
@@ -297,7 +335,54 @@ export class PrismaCrudService<T> extends CrudService<T> {
     }
   }
 
-  protected operatorSet = new Set(['$eq', '$ne', 'cont', '$cont']);
+  protected operatorSet = new Set([
+    '$eq',
+    '$ne',
+    '$cont',
+    '$gt',
+    '$lt',
+    '$gte',
+    '$lte',
+    '$starts',
+    '$ends',
+    '$in',
+    '$notin',
+    '$excl',
+    '$isnull',
+    '$notnull',
+    '$between',
+    '$eqL',
+    '$neL',
+    '$startsL',
+    '$endsL',
+    '$contL',
+    '$exclL',
+    '$inL',
+    '$notinL',
+    'eq',
+    'ne',
+    'cont',
+    'gt',
+    'lt',
+    'gte',
+    'lte',
+    'starts',
+    'ends',
+    'in',
+    'notin',
+    'excl',
+    'isnull',
+    'notnull',
+    'between',
+    'eqL',
+    'neL',
+    'startsL',
+    'endsL',
+    'contL',
+    'exclL',
+    'inL',
+    'notinL'
+  ]);
 
   async getOne(req: CrudRequest): Promise<T> {
     const userID = req.parsed.paramsFilter[0];
