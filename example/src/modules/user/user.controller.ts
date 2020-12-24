@@ -1,9 +1,10 @@
 import { Controller } from '@nestjs/common';
-import { Crud } from '@nestjsx/crud';
+// import { Crud } from '@nestjsx/crud';
+import { PrismaCrud } from 'nestjs-crud-prisma';
 import { UserService } from './user.service';
 import { User } from '../../generated/type-graphql';
 
-@Crud({
+@PrismaCrud({
   model: {
     type: User
   },

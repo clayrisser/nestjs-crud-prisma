@@ -1,23 +1,27 @@
+import * as TypeGraphql from 'type-graphql';
+import deepmerge from 'deepmerge';
+import { BaseRouteName } from '@nestjsx/crud/lib/types';
+import { CrudActions, CrudValidationGroups } from '@nestjsx/crud/lib/enums';
+import { CrudConfigService } from '@nestjsx/crud/lib/module';
+import { FieldMetadata } from 'type-graphql/dist/metadata/definitions';
+import { R } from '@nestjsx/crud/lib/crud/reflection.helper';
 import { RequestMethod } from '@nestjs/common';
 import { RouteParamtypes } from '@nestjs/common/enums/route-paramtypes.enum';
-import {
-  isFalse,
-  isArrayFull,
-  isObjectFull,
-  isFunction,
-  objKeys,
-  isIn,
-  isEqual,
-  getOwnPropNames,
-  isNil,
-  isUndefined
-} from '@nestjsx/util';
-import deepmerge from 'deepmerge';
-
-import { R } from '@nestjsx/crud/lib/crud/reflection.helper';
 import { SerializeHelper } from '@nestjsx/crud/lib/crud/serialize.helper';
 import { Swagger } from '@nestjsx/crud/lib/crud/swagger.helper';
 import { Validation } from '@nestjsx/crud/lib/crud/validation.helper';
+import {
+  getOwnPropNames,
+  isArrayFull,
+  isEqual,
+  isFalse,
+  isFunction,
+  isIn,
+  isNil,
+  isObjectFull,
+  isUndefined,
+  objKeys
+} from '@nestjsx/util';
 import {
   CrudRequestInterceptor,
   CrudResponseInterceptor
@@ -28,9 +32,6 @@ import {
   CrudRequest,
   MergedCrudOptions
 } from '@nestjsx/crud/lib/interfaces';
-import { BaseRouteName } from '@nestjsx/crud/lib/types';
-import { CrudActions, CrudValidationGroups } from '@nestjsx/crud/lib/enums';
-import { CrudConfigService } from '@nestjsx/crud/lib/module';
 
 export class PrismaCrudRoutesFactory {
   protected options: MergedCrudOptions;
@@ -335,12 +336,30 @@ export class PrismaCrudRoutesFactory {
     Swagger.setExtraModels(this.swaggerModels);
   }
 
-  private createModelType(modelType: any) {
-    modelType._OPENAPI_METADATA_FACTORY = () => ({
-      Name: { required: false, type: () => String },
-      age: { required: false, type: () => Number },
-      id: { required: false, type: () => Number }
-    });
+  private createModelType(ModelType: any) {
+    ModelType._OPENAPI_METADATA_FACTORY = () =>
+      TypeGraphql.getMetadataStorage()
+        .fields.filter(
+          (fieldMetadata: FieldMetadata) => fieldMetadata.target === ModelType
+        )
+        .reduce(
+          (
+            fields: { [key: string]: { required: boolean; type: () => any } },
+            fieldMetadata: FieldMetadata
+          ) => {
+            const swaggerType = fieldMetadata.getType() as () => any;
+            if (!swaggerType) return fields;
+            // TODO
+            if (typeof swaggerType !== 'function') return fields;
+            fields[fieldMetadata.name] = {
+              required: false,
+              type: swaggerType
+            };
+            return fields;
+          },
+          {}
+        );
+    return ModelType;
   }
 
   private createRoutes(routesSchema: BaseRoute[]) {

@@ -12,6 +12,7 @@ deploy: generate postgres migrations/*/migration.sql
 .PHONY: dev
 dev: postgres env
 	@echo | $(PRISMA) migrate dev --preview-feature $(ARGS)
+	@$(MAKE) -s patch
 
 .PHONY: env
 env: .env
@@ -35,6 +36,7 @@ studio:
 .PHONY: generate
 generate:
 	@$(PRISMA) generate
+	@$(MAKE) -s patch
 
 .PHONY: generate-watch
 generate-watch:
@@ -51,6 +53,10 @@ postgres: env
 
 migrations/%/migration.sql:
 	@$(MAKE) -s dev ARGS="--create-only"
+
+.PHONY: patch
+patch:
+	@find ../src/generated/type-graphql -type f -print0 | xargs -0 sed -i 's|@prisma/client|@prisma/generated|g'
 
 %:
 	@

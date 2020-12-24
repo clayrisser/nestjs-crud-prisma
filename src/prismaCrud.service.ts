@@ -1,18 +1,18 @@
+import camelcase from 'lodash/camelCase';
+import mapSeriesAsync from 'map-series-async';
+import { PrismaService } from 'nestjs-prisma-module';
+import { isArrayFull, objKeys, isObject } from '@nestjsx/util';
 import {
   CreateManyDto,
   CrudRequest,
   GetManyDefaultResponse
 } from '@nestjsx/crud';
 import {
-  QuerySort,
+  ComparisonOperator,
   QueryFilter,
-  SCondition,
-  ComparisonOperator
+  QuerySort,
+  SCondition
 } from '@nestjsx/crud-request';
-import camelcase from 'lodash/camelCase';
-import { PrismaService } from 'nestjs-prisma-module';
-import { isArrayFull, objKeys, isObject } from '@nestjsx/util';
-import mapSeriesAsync from 'map-series-async';
 import CrudService from './crudService';
 import { WhereInput, HashMap, PrismaFilter } from './types';
 

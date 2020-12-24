@@ -1,6 +1,6 @@
 {
   "name": "nestjs-crud-prisma",
-  "version": "0.0.5",
+  "version": "0.0.16",
   "description": "crud for restful apis built with nestjs and prisma",
   "keywords": [
     "nestjs-crud-prisma",
@@ -56,7 +56,8 @@
     "deepmerge": "^4.2.2",
     "lodash": "^4.17.20",
     "map-series-async": "^0.0.1",
-    "nestjs-prisma-module": "^0.0.1"
+    "nestjs-prisma-module": "^0.0.1",
+    "type-graphql": "^1.1.1"
   },
   "peerDependencies": {
     "@nestjsx/crud": "^4.6.2"

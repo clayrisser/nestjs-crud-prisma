@@ -18,6 +18,8 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Configuration" (
     "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "name" TEXT NOT NULL,
     "serialNumber" TEXT NOT NULL,
     "type" TEXT NOT NULL,
