@@ -32,6 +32,7 @@ import {
   CrudRequest,
   MergedCrudOptions
 } from '@nestjsx/crud/lib/interfaces';
+import { TypeValue } from 'type-graphql/dist/decorators/types';
 
 export class PrismaCrudRoutesFactory {
   protected options: MergedCrudOptions;
@@ -337,6 +338,7 @@ export class PrismaCrudRoutesFactory {
   }
 
   private createModelType(ModelType: any) {
+    console.log('ModelType', ModelType);
     ModelType._OPENAPI_METADATA_FACTORY = () =>
       TypeGraphql.getMetadataStorage()
         .fields.filter(
@@ -344,15 +346,17 @@ export class PrismaCrudRoutesFactory {
         )
         .reduce(
           (
-            fields: { [key: string]: { required: boolean; type: () => any } },
+            fields: { [key: string]: { required: boolean; type: TypeValue } },
             fieldMetadata: FieldMetadata
           ) => {
-            const swaggerType = fieldMetadata.getType() as () => any;
+            console.log('fieldMetadata', fieldMetadata);
+            const swaggerType = fieldMetadata.getType();
+            console.log('swaggerType', typeof swaggerType, swaggerType);
             if (!swaggerType) return fields;
             // TODO
             if (typeof swaggerType !== 'function') return fields;
             fields[fieldMetadata.name] = {
-              required: false,
+              required: !!fieldMetadata.typeOptions.nullable,
               type: swaggerType
             };
             return fields;
