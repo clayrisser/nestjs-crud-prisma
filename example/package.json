@@ -55,7 +55,7 @@
     "graphql": "^15.4.0",
     "graphql-fields": "^2.0.3",
     "graphql-type-json": "^0.3.2",
-    "nestjs-crud-prisma": "workspace:*",
+    "nestjs-crud-prisma": "0.0.15",
     "nestjs-prisma-module": "^0.0.1",
     "ora": "^5.1.0",
     "prisma-scripts": "0.2.3",

@@ -1,7 +1,14 @@
+import { TypeValue } from 'type-graphql/dist/decorators/types';
+
 export declare type Enumerable<T> = T | Array<T>;
 
 export interface HashMap<T = any> {
   [key: string]: T;
+}
+
+export interface Field {
+  required: boolean;
+  type: TypeValue;
 }
 
 export type PrismaFilter = StringFilter | StringNullableFilter | DateTimeFilter;

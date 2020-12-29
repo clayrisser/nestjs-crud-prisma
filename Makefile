@@ -115,8 +115,12 @@ lib:
 	-@rm -r node_modules/.tmp/lib $(NOFAIL)
 	@$(BABEL) src -d lib --extensions '.ts,.tsx' --source-maps
 	@$(TSC) -d --emitDeclarationOnly
-	@cp -r node_modules/.tmp/lib/src/. lib $(NOFAIL)
-	# -@rm -rf example/node_modules/nestjs-crud-prisma/lib && cp -r lib example/node_modules/nestjs-crud-prisma/lib
+	@cp -r node_modules/.tmp/lib/src/. lib
+	-@rm -rf example/node_modules/nestjs-crud-prisma/lib && cp -r lib example/node_modules/nestjs-crud-prisma/lib
+
+.PHONY: pack
+pack: ~build
+	@$(NPM) pack
 
 .PHONY: coverage
 coverage: ~lint
