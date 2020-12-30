@@ -4,6 +4,7 @@ import { FieldMetadata } from 'type-graphql/dist/metadata/definitions';
 import { SerializeHelper } from '@nestjsx/crud/lib/crud/serialize.helper';
 import { Swagger } from '@nestjsx/crud/lib/crud/swagger.helper';
 import { isFunction } from '@nestjsx/util';
+import { TypeValue } from 'type-graphql/dist/decorators/types';
 import CrudRoutesFactoryShim from './crudRoutesFactoryShim';
 import { Field, HashMap } from './types';
 
@@ -54,15 +55,8 @@ export class PrismaCrudRoutesFactory extends CrudRoutesFactoryShim {
           (fieldMetadata: FieldMetadata) => fieldMetadata.target === ModelType
         )
         .reduce((fields: HashMap<Field>, fieldMetadata: FieldMetadata) => {
-          const swaggerType = fieldMetadata.getType();
+          const swaggerType = this.getSwaggerType(fieldMetadata);
           if (!swaggerType) return fields;
-          console.log(
-            'swaggerType',
-            swaggerType.toString(),
-            typeof swaggerType
-          );
-          // TODO
-          if (typeof swaggerType !== 'function') return fields;
           fields[fieldMetadata.name] = {
             required: !fieldMetadata.typeOptions.nullable,
             type: swaggerType
@@ -73,4 +67,38 @@ export class PrismaCrudRoutesFactory extends CrudRoutesFactoryShim {
     this._models[ModelType.name] = ModelType;
     return ModelType;
   }
+
+  private getSwaggerType(fieldMetadata: FieldMetadata): TypeValue | undefined {
+    const swaggerType = fieldMetadata.getType();
+    if (!swaggerType) return;
+    switch (swaggerType.toString()) {
+      case 'Int':
+        return Number;
+      case 'Float':
+        return Number;
+      case 'JSON':
+        return JSON;
+    }
+    if (typeof swaggerType === 'function') return swaggerType;
+    if (
+      typeof swaggerType === 'object' &&
+      symmetricDifference(
+        new Set(Object.keys(swaggerType)),
+        new Set(Object.values(swaggerType))
+      )
+    ) {
+      return String;
+    }
+    console.warn(
+      `unknown type ${typeof swaggerType} ${swaggerType.toString()}`
+    );
+  }
+}
+
+function difference<T = any>(a: Set<T>, b: Set<T>): Set<T> {
+  return new Set([...a].filter((x) => !b.has(x)));
+}
+
+function symmetricDifference<T = any>(a: Set<T>, b: Set<T>): Set<T> {
+  return new Set([...difference(a, b), ...difference(b, a)]);
 }
