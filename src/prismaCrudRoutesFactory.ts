@@ -56,6 +56,11 @@ export class PrismaCrudRoutesFactory extends CrudRoutesFactoryShim {
         .reduce((fields: HashMap<Field>, fieldMetadata: FieldMetadata) => {
           const swaggerType = fieldMetadata.getType();
           if (!swaggerType) return fields;
+          console.log(
+            'swaggerType',
+            swaggerType.toString(),
+            typeof swaggerType
+          );
           // TODO
           if (typeof swaggerType !== 'function') return fields;
           fields[fieldMetadata.name] = {
