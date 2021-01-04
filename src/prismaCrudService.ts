@@ -87,8 +87,8 @@ export class PrismaCrudService<T> extends CrudService<T> {
     parsed,
     options
   }: CrudRequest): Promise<GetManyDefaultResponse<T> | T[]> {
-    if (this.decidePagination(parsed, options)) {
-      const total = await this.client.count();
+    const isPaginated = this.decidePagination(parsed, options);
+    try {
       const result = await this.client.findMany({
         ...(parsed.sort.length > 0
           ? {
@@ -121,51 +121,92 @@ export class PrismaCrudService<T> extends CrudService<T> {
             }
           : {}),
         ...(parsed.limit ? { take: parsed.limit } : {}),
-        ...(parsed.offset ? { skip: parsed.offset } : {})
+        ...(isPaginated && parsed.offset ? { skip: parsed.offset } : {})
       });
-      const { limit, offset } = parsed;
-      const response: GetManyDefaultResponse<T> = {
-        data: result,
-        count: result.length,
-        total,
-        page: limit ? Math.floor(offset / limit) + 1 : 1,
-        pageCount: limit && total ? Math.ceil(total / limit) : 1
-      };
-      return response;
+      if (isPaginated) {
+        const total = await this.client.count();
+        const { limit, offset } = parsed;
+        const response: GetManyDefaultResponse<T> = {
+          data: result,
+          count: result.length,
+          total,
+          page: limit ? Math.floor(offset / limit) + 1 : 1,
+          pageCount: limit && total ? Math.ceil(total / limit) : 1
+        };
+        return response;
+      }
+      return result;
+    } catch (err) {
+      throw err;
     }
-    return this.client.findMany({
-      ...(parsed.or
-        ? {
-            where: await this.getWhereInputFromOr(parsed.or)
-          }
-        : {}),
-      ...(parsed.filter
-        ? {
-            where: await this.getWhereInputFromFilter(parsed.filter)
-          }
-        : {}),
-      ...(parsed.search
-        ? {
-            where: await this.getWhereInputFromSearch(parsed.search)
-          }
-        : {}),
-      ...(parsed.sort.length > 0
-        ? {
-            orderBy: {
-              ...parsed.sort.reduce(
-                (orderBy: OrderBy, querySort: QuerySort) => {
-                  orderBy[querySort.field] = (
-                    querySort.order || 'ASC'
-                  ).toLowerCase() as 'asc' | 'desc';
-                  return orderBy;
-                },
-                {}
-              )
-            }
-          }
-        : {}),
-      ...(parsed.limit ? { take: parsed.limit } : {})
-    });
+  }
+
+  async getOne(req: CrudRequest): Promise<T> {
+    const userID = req.parsed.paramsFilter[0];
+    try {
+      return this.client.findOne({
+        where: {
+          id: userID.value
+        }
+      });
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async createOne(_req: CrudRequest, dto: T): Promise<T> {
+    try {
+      return this.client.create({
+        data: dto
+      });
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async createMany(_req: CrudRequest, dto: CreateManyDto): Promise<T[]> {
+    try {
+      return Promise.all(
+        dto.bulk.map((item: any) => {
+          return this.client.create({
+            data: item
+          });
+        })
+      );
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async updateOne(req: CrudRequest, dto: T): Promise<T> {
+    const userID = req.parsed.paramsFilter[0];
+    try {
+      return this.client.update({
+        where: {
+          id: userID.value
+        },
+        data: dto
+      });
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async replaceOne(_req: CrudRequest, _dto: T): Promise<T> {
+    return {} as T;
+  }
+
+  async deleteOne(req: CrudRequest): Promise<void | T> {
+    const userID = req.parsed.paramsFilter[0];
+    try {
+      return this.client.delete({
+        where: {
+          id: userID.value
+        }
+      });
+    } catch (err) {
+      throw err;
+    }
   }
 
   protected async getWhereInputFromFilter(
@@ -383,54 +424,6 @@ export class PrismaCrudService<T> extends CrudService<T> {
     'inL',
     'notinL'
   ]);
-
-  async getOne(req: CrudRequest): Promise<T> {
-    const userID = req.parsed.paramsFilter[0];
-    return this.client.findOne({
-      where: {
-        id: userID.value
-      }
-    });
-  }
-
-  async createOne(_req: CrudRequest, dto: T): Promise<T> {
-    return this.client.create({
-      data: dto
-    });
-  }
-
-  async createMany(_req: CrudRequest, dto: CreateManyDto): Promise<T[]> {
-    return Promise.all(
-      dto.bulk.map((item: any) => {
-        return this.client.create({
-          data: item
-        });
-      })
-    );
-  }
-
-  async updateOne(req: CrudRequest, dto: T): Promise<T> {
-    const userID = req.parsed.paramsFilter[0];
-    return this.client.update({
-      where: {
-        id: userID.value
-      },
-      data: dto
-    });
-  }
-
-  async replaceOne(_req: CrudRequest, _dto: T): Promise<T> {
-    return {} as T;
-  }
-
-  async deleteOne(req: CrudRequest): Promise<void | T> {
-    const userID = req.parsed.paramsFilter[0];
-    return this.client.delete({
-      where: {
-        id: userID.value
-      }
-    });
-  }
 }
 
 export type PrismaClient = any;
