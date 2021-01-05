@@ -13,6 +13,7 @@ import {
   QuerySort,
   SCondition
 } from '@nestjsx/crud-request';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import CrudService from './crudService';
 import { WhereInput, HashMap, PrismaFilter } from './types';
 
@@ -141,27 +142,33 @@ export class PrismaCrudService<T> extends CrudService<T> {
     }
   }
 
-  async getOne(req: CrudRequest): Promise<T> {
+  async getOne(req: CrudRequest): Promise<any> {
     const userID = req.parsed.paramsFilter[0];
-    try {
-      return this.client.findOne({
+    this.client
+      .findUnique({
         where: {
           id: userID.value
         }
+      })
+      .then((res: any) => {
+        return res;
+      })
+      .catch((err: any) => {
+        console.log(err);
       });
-    } catch (err) {
-      throw err;
-    }
   }
 
-  async createOne(_req: CrudRequest, dto: T): Promise<T> {
-    try {
-      return this.client.create({
+  async createOne(_req: CrudRequest, dto: T): Promise<any> {
+    this.client
+      .create({
         data: dto
+      })
+      .then((res: any) => {
+        return res;
+      })
+      .catch((err: any) => {
+        console.log(err);
       });
-    } catch (err) {
-      throw err;
-    }
   }
 
   async createMany(_req: CrudRequest, dto: CreateManyDto): Promise<T[]> {
@@ -178,18 +185,21 @@ export class PrismaCrudService<T> extends CrudService<T> {
     }
   }
 
-  async updateOne(req: CrudRequest, dto: T): Promise<T> {
+  async updateOne(req: CrudRequest, dto: T): Promise<any> {
     const userID = req.parsed.paramsFilter[0];
-    try {
-      return this.client.update({
+    this.client
+      .update({
         where: {
           id: userID.value
         },
         data: dto
+      })
+      .then((res: any) => {
+        return res;
+      })
+      .catch(async (err: any) => {
+        throw new HttpException(err.meta.details, HttpStatus.BAD_REQUEST);
       });
-    } catch (err) {
-      throw err;
-    }
   }
 
   async replaceOne(_req: CrudRequest, _dto: T): Promise<T> {
@@ -198,15 +208,20 @@ export class PrismaCrudService<T> extends CrudService<T> {
 
   async deleteOne(req: CrudRequest): Promise<void | T> {
     const userID = req.parsed.paramsFilter[0];
-    try {
-      return this.client.delete({
+    this.client
+      .delete({
         where: {
           id: userID.value
         }
+      })
+      .then((res: any) => {
+        return res;
+      })
+      .catch((err: any) => {
+        console.log(typeof err);
+        console.log(Object.keys(err));
+        console.log(err);
       });
-    } catch (err) {
-      throw err;
-    }
   }
 
   protected async getWhereInputFromFilter(
