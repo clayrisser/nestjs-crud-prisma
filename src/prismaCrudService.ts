@@ -150,12 +150,10 @@ export class PrismaCrudService<T> extends CrudService<T> {
       }
     });
     if (res === null) {
-      console.log('in if');
       this.throwNotFoundException(`${userID.value}`);
     }
     return res;
     } catch (err) {
-      console.log('in catch');
       this.throwNotFoundException(`${userID.value}`);
       return err;
     }
