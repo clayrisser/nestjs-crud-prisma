@@ -144,13 +144,20 @@ export class PrismaCrudService<T> extends CrudService<T> {
   async getOne(req: CrudRequest): Promise<T> {
     const userID = req.parsed.paramsFilter[0];
     try {
-      return this.client.findOne({
-        where: {
-          id: userID.value
-        }
-      });
+    const res = await this.client.findUnique({
+      where: {
+        id: userID.value
+      }
+    });
+    if (res === null) {
+      console.log('in if');
+      this.throwNotFoundException(`${userID.value}`);
+    }
+    return res;
     } catch (err) {
-      throw err;
+      console.log('in catch');
+      this.throwNotFoundException(`${userID.value}`);
+      return err;
     }
   }
 
