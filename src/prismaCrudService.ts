@@ -139,6 +139,12 @@ export class PrismaCrudService<T> extends CrudService<T> {
       }
       return result;
     } catch (err) {
+      if (
+        err.toString().includes('Invalid') &&
+        err.toString().includes('invocation:')
+      ) {
+        this.throwBadRequestException('Bad Request');
+      }
       throw err;
     }
   }
@@ -152,7 +158,7 @@ export class PrismaCrudService<T> extends CrudService<T> {
         }
       });
       if (res === null) {
-        this.throwNotFoundException(`${userID.value}`);
+        this.throwNotFoundException(`${this.tableName}`);
       }
       return res;
     } catch (err) {
@@ -179,24 +185,25 @@ export class PrismaCrudService<T> extends CrudService<T> {
   }
 
   async createMany(_req: CrudRequest, dto: CreateManyDto): Promise<T[]> {
-    try {
-      const res = Promise.all(
-        dto.bulk.map((item: any) => {
-          return this.client.create({
+    return Promise.all(
+      dto.bulk.map(async (item: any) => {
+        let res;
+        try {
+          res = await this.client.create({
             data: item
           });
-        })
-      );
-      return res;
-    } catch (err) {
-      if (
-        err.toString().includes('Invalid') &&
-        err.toString().includes('invocation:')
-      ) {
-        this.throwBadRequestException('Bad Request');
-      }
-      throw err;
-    }
+          return res;
+        } catch (err) {
+          if (
+            err.toString().includes('Invalid') &&
+            err.toString().includes('invocation:')
+          ) {
+            this.throwBadRequestException('Bad Request');
+          }
+          throw err;
+        }
+      })
+    );
   }
 
   async updateOne(req: CrudRequest, dto: T): Promise<T> {
@@ -228,13 +235,20 @@ export class PrismaCrudService<T> extends CrudService<T> {
   async deleteOne(req: CrudRequest): Promise<void | T> {
     const userID = req.parsed.paramsFilter[0];
     try {
-      return this.client.delete({
+      const res = await this.client.delete({
         where: {
           id: userID.value
         }
       });
+      return res;
     } catch (err) {
-      throw err;
+      if (
+        err.toString().includes('Invalid') &&
+        err.toString().includes('invocation:')
+      ) {
+        this.throwBadRequestException('Bad Request');
+      }
+      return err;
     }
   }
 
