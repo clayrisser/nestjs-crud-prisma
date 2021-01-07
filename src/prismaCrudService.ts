@@ -13,8 +13,10 @@ import {
   QuerySort,
   SCondition
 } from '@nestjsx/crud-request';
+import { UseFilters } from '@nestjs/common';
 import CrudService from './crudService';
 import { WhereInput, HashMap, PrismaFilter } from './types';
+import { HttpExceptionFilter } from './http-exception.filter';
 
 export interface OrderBy {
   [key: string]: 'asc' | 'desc' | undefined;
@@ -144,56 +146,78 @@ export class PrismaCrudService<T> extends CrudService<T> {
   async getOne(req: CrudRequest): Promise<T> {
     const userID = req.parsed.paramsFilter[0];
     try {
-    const res = await this.client.findUnique({
-      where: {
-        id: userID.value
+      const res = await this.client.findUnique({
+        where: {
+          id: userID.value
+        }
+      });
+      if (res === null) {
+        this.throwNotFoundException(`${userID.value}`);
       }
-    });
-    if (res === null) {
-      this.throwNotFoundException(`${userID.value}`);
-    }
-    return res;
+      return res;
     } catch (err) {
-      this.throwNotFoundException(`${userID.value}`);
-      return err;
+      this.throwBadRequestException('Bad Request');
+      throw err;
     }
   }
 
   async createOne(_req: CrudRequest, dto: T): Promise<T> {
     try {
-      return this.client.create({
+      const res = await this.client.create({
         data: dto
       });
+      return res;
     } catch (err) {
+      if (
+        err.toString().includes('Invalid') &&
+        err.toString().includes('invocation:')
+      ) {
+        this.throwBadRequestException('Bad Request');
+      }
       throw err;
     }
   }
 
   async createMany(_req: CrudRequest, dto: CreateManyDto): Promise<T[]> {
     try {
-      return Promise.all(
+      const res = Promise.all(
         dto.bulk.map((item: any) => {
           return this.client.create({
             data: item
           });
         })
       );
+      return res;
     } catch (err) {
+      if (
+        err.toString().includes('Invalid') &&
+        err.toString().includes('invocation:')
+      ) {
+        this.throwBadRequestException('Bad Request');
+      }
       throw err;
     }
   }
 
   async updateOne(req: CrudRequest, dto: T): Promise<T> {
     const userID = req.parsed.paramsFilter[0];
+    let res;
     try {
-      return this.client.update({
+      res = await this.client.update({
         where: {
           id: userID.value
         },
         data: dto
       });
+      return res;
     } catch (err) {
-      throw err;
+      if (
+        err.toString().includes('Invalid') &&
+        err.toString().includes('invocation:')
+      ) {
+        this.throwBadRequestException('Bad Request');
+      }
+      return err;
     }
   }
 
