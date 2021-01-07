@@ -6,6 +6,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from 'nestjs-crud-prisma';
 import pkg from '../package.json';
 import { AppModule } from './app.module';
 
@@ -26,6 +27,7 @@ const { env } = process;
   app.setViewEngine('ejs');
   app.useGlobalPipes(new ValidationPipe());
   app.useStaticAssets(path.resolve(rootPath, 'public'));
+  app.useGlobalFilters(new HttpExceptionFilter());
   if (env.SWAGGER === '1') {
     const options = new DocumentBuilder()
       .setTitle(pkg.name)
