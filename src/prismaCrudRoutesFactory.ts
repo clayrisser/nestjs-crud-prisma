@@ -14,10 +14,6 @@ export class PrismaCrudRoutesFactory extends CrudRoutesFactoryShim {
 
   private _models: HashMap<Field> = {};
 
-  constructor(target: any, options: CrudOptions) {
-    super(target, options);
-  }
-
   static create(target: any, options: CrudOptions): PrismaCrudRoutesFactory {
     return new PrismaCrudRoutesFactory(target, options);
   }
@@ -68,9 +64,9 @@ export class PrismaCrudRoutesFactory extends CrudRoutesFactoryShim {
     return ModelType;
   }
 
-  private getSwaggerType(fieldMetadata: FieldMetadata): TypeValue | undefined {
+  private getSwaggerType(fieldMetadata: FieldMetadata): TypeValue | null {
     const swaggerType = fieldMetadata.getType();
-    if (!swaggerType) return;
+    if (!swaggerType) return null;
     switch (swaggerType.toString()) {
       case 'Int':
         return Number;
@@ -89,9 +85,11 @@ export class PrismaCrudRoutesFactory extends CrudRoutesFactoryShim {
     ) {
       return String;
     }
+    // eslint-disable-next-line no-console
     console.warn(
       `unknown type ${typeof swaggerType} ${swaggerType.toString()}`
     );
+    return null;
   }
 }
 

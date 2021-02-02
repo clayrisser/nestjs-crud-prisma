@@ -12,14 +12,18 @@
     }
   },
   "rules": {
+    "@typescript-eslint/comma-dangle": ["error", "never"],
     "@typescript-eslint/indent": "off",
     "arrow-body-style": "off",
     "class-methods-use-this": "off",
-    "comma-dangle": ["error", "never"],
+    "comma-dangle": "off",
     "default-case": "off",
+    "import/extensions": ["error", "never", { "json": "always" }],
     "import/no-cycle": "off",
     "import/prefer-default-export": "off",
     "max-classes-per-file": "off",
+    "max-lines": ["error", 500],
+    "max-lines-per-function": ["error", 50],
     "no-await-in-loop": "off",
     "no-empty-function": ["error", { "allow": ["constructors"] }],
     "no-extra-boolean-cast": "off",
@@ -30,7 +34,13 @@
     "no-underscore-dangle": "off",
     "no-use-before-define": "off",
     "no-useless-constructor": "off",
+    "react/jsx-props-no-spreading": "off",
     "yoda": "off",
+    "lines-between-class-members": [
+      "error",
+      "always",
+      { "exceptAfterSingleLine": true }
+    ],
     "import/no-unresolved": [
       "error",
       {
@@ -59,14 +69,26 @@
       "error",
       {
         "devDependencies": [
-          "**/*.stories.js",
-          "**/*.stories.jsx",
-          "**/*.stories.ts",
-          "**/*.stories.tsx",
-          "storybook/*.js",
-          "storybook/*.jsx",
-          "storybook/*.ts",
-          "storybook/*.tsx"
+          "**/*.spec.js",
+          "**/*.spec.jsx",
+          "**/*.spec.ts",
+          "**/*.spec.tsx",
+          "**/*.story.js",
+          "**/*.story.jsx",
+          "**/*.story.ts",
+          "**/*.story.tsx",
+          "**/*.test.js",
+          "**/*.test.jsx",
+          "**/*.test.ts",
+          "**/*.test.tsx",
+          "storybook/**/*.js",
+          "storybook/**/*.jsx",
+          "storybook/**/*.ts",
+          "storybook/**/*.tsx",
+          "tests/*.js",
+          "tests/*.jsx",
+          "tests/*.ts",
+          "tests/*.tsx"
         ]
       }
     ]
@@ -82,7 +104,7 @@
     {
       "files": ["*.ts", "*.tsx"],
       "rules": {
-        "no-unused-vars": "off",
+        "no-unused-vars": "off"
       }
     }
   ],
