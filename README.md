@@ -1,5 +1,7 @@
 # nestjs-crud-prisma
 
+![](assets/nestjs-crud-prisma.png)
+
 [![GitHub stars](https://img.shields.io/github/stars/codejamninja/nestjs-crud-prisma.svg?style=social&label=Stars)](https://github.com/codejamninja/nestjs-crud-prisma)
 
 > crud for restful apis built with nestjs and prisma
